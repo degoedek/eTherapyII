@@ -3,4 +3,7 @@
     <string name="introTitle">Welcome</string>
     <string name="introDescription">Take control of your physical or occupational therapy with eTherapy- your own personalized training app that uses wireless sensors to ensure proper recovery so that you can return to being you 😀.</string>
     <string name="tap">Tap Anywhere to Continue</string>
+    <string name="therapist_menu_home">Home</string>
+    <string name="therapist_menu_exercises">Exercises</string>
+    <string name="therapist_menu_patients">Patients</string>
 </resources>
