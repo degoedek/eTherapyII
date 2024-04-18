@@ -6,4 +6,7 @@
     <string name="therapist_menu_home">Home</string>
     <string name="therapist_menu_exercises">Exercises</string>
     <string name="therapist_menu_patients">Patients</string>
+    <string name="menu_activities">Activities</string>
+    <string name="menu_data">Me</string>
+    <string name="menu_toDoList">To-Do List</string>
 </resources>
