@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/nav_home"
-        android:icon="@drawable/ic_home_black_24dp"
-        android:title="@string/therapist_menu_home" />
+        android:id="@+id/nav_activities"
+        android:icon="@drawable/ic_baseline_accessibility_new_24"
+        android:title="@string/menu_activities" />
 
     <item
-        android:id="@+id/nav_exercises"
-        android:icon="@drawable/ic_baseline_sports_handball_24"
-        android:title="@string/therapist_menu_exercises" />
+        android:id="@+id/nav_data"
+        android:icon="@drawable/ic_baseline_info_24"
+        android:title="@string/menu_data" />
 
     <item
-        android:id="@+id/nav_patients"
-        android:icon="@drawable/ic_baseline_person_search_24"
-        android:title="@string/therapist_menu_patients" />
+        android:id="@+id/nav_toDoList"
+        android:icon="@drawable/ic_baseline_format_list_bulleted_24"
+        android:title="@string/menu_toDoList" />
 
 </menu>
