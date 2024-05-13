@@ -37,7 +37,7 @@ public class HubActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.nav_activities) {
                 selectedFragment = new HomeFragment();
             } else if (item.getItemId() == R.id.nav_data) {
-                selectedFragment = new PersonalDataFragment();
+                selectedFragment = new WIPFragment();
             }
             // TODO: FINISH CONVERTING SWITCH TO IF
 
