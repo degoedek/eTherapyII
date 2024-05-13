@@ -16,6 +16,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        ivy {url "https://mbientlab.com/releases/ivyrep"}
     }
 }
 

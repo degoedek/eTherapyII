@@ -43,4 +43,31 @@
     <color name="greenlight">#abffc0</color>
     <color name="greenmid">#3eb959</color>
     <color name="greendark">#247b37</color>
+    <color name="lightorange">#FFE0B2</color>
+    <color name="lightgreen">#C8E6C9</color>
+
+<!--  eRunner Colors  -->
+    <color name="whitebg">#30FFFFFF</color>
+
+    <!--  PRIMARY  -->
+    <color name="primary">#FFC107</color>#54FFC107
+    <color name="primary2">#54FFC107</color>30FFC107
+    <color name="primarybg">#30FFC107</color>
+    <!--  SECONDARY  ORIGINALLY: #9807FF-->
+    <color name="secondary">#FF000000</color>
+    <color name="secondary2">#A49807FF</color>
+    <!--  FRAGMENTS  -->
+    <color name="fragment">#30FFFFFF</color>
+
+    <!--  SENSOR COLORS  -->
+    <!--  Unreliable is utilized as a sensor color  -->
+    <color name="eRunnerBlue">#3F51B5</color>
+
+    <!-- CALIBRATION COLORS -->
+    <color name="highAccuracy">#FF26FF00</color>
+    <color name="mediumAccuracy">#FFFB00</color>
+    <color name="lowAccuracy">#FF9100</color>
+    <color name="unreliable">#FF0000</color>
+
+    <color name="sensorFusion">#9C27B0</color>
 </resources>
