@@ -49,7 +49,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_connection_page);
+        setContentView(R.layout.activity_connection);
 
         //Variable Declarations
         BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
@@ -64,12 +64,12 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
         //onClickListeners
         connect.setOnClickListener(view -> {
-            Log.i("ConnectionPage", "Connect button executed!!!!!!!!!!!!!!!!!!");
+            Log.i("ConnectionPage", "Connect button executed");
             //Bind the service when the activity is created
             getApplicationContext().bindService(new Intent(this, BtleService.class), this, Context.BIND_AUTO_CREATE);
 
             Thread connectThread = new Thread(() -> {
-                Log.i("ConnectionPage", "Connect thread started!!!!!!!!!!!!!!!!!!");
+                Log.i("ConnectionPage", "Connect thread started");
                 getApplicationContext().bindService(new Intent(ConnectionPage.this, BtleService.class), ConnectionPage.this, Context.BIND_AUTO_CREATE);
 
 
@@ -83,8 +83,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             connectThread.start();
         });
         metrics.setOnClickListener(view -> {
-            //TODO: Add another intent that sends the number of sensors connected to the metrics page (maybe)
-            Intent intent = new Intent(ConnectionPage.this, MetricsPage.class);
+            Intent intent = new Intent(ConnectionActivity.this, MetricsPage.class);
             startActivity(intent);
         });
 
