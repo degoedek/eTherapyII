@@ -27,8 +27,8 @@ Button therapy, stretching;
 
         //Therapy Button
         therapy.setOnClickListener(v -> {
-//                Intent intent = new Intent(getActivity(),ConnectionActivity.class);
-//                startActivity(intent);
+                Intent intent = new Intent(getActivity(), ConnectionActivity.class);
+                startActivity(intent);
             //getActivity().finish();
         });
 
