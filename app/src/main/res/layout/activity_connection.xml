@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
+    tools:context=".ConnectionActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="380dp"
+            android:layout_height="705dp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingTop="50dp">
+
+            <TextView
+                android:id="@+id/pageTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:paddingBottom="13dp"
+                android:text="Connect Sensors"
+                android:textSize="36sp"/>
+
+            <GridLayout
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
+
+                <TextView
+                    android:id="@+id/Sensor1Title"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="Sensor 1"
+                    android:textColor="@color/black"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/Sensor2Title"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:layout_row="0"
+                    android:layout_column="2"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="Sensor 2"
+                    android:textColor="@color/black"
+                    android:textSize="18sp" />
+            </GridLayout>
+
+            <GridLayout
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
+
+                <ImageView
+                    android:id="@+id/mmrl1"
+                    android:layout_width="110dp"
+                    android:layout_height="110dp"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    app:srcCompat="@drawable/mmrl" />
+
+                <ImageView
+                    android:id="@+id/s1battery"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    app:srcCompat="@drawable/battery_unknown" />
+
+                <TextView
+                    android:id="@+id/s1batteryPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    android:paddingTop="2dp"
+                    android:text="      %" />
+
+                <ImageView
+                    android:id="@+id/mmrl2"
+                    android:layout_width="110dp"
+                    android:layout_height="110dp"
+                    android:layout_row="0"
+                    android:layout_column="2"
+                    app:srcCompat="@drawable/mmrl" />
+
+                <ImageView
+                    android:id="@+id/s2battery"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_row="0"
+                    android:layout_column="2"
+                    app:srcCompat="@drawable/battery_unknown" />
+
+                <TextView
+                    android:id="@+id/s2batteryPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="0"
+                    android:layout_column="2"
+                    android:paddingTop="2dp"
+                    android:text="      %" />
+
+                <TextView
+                    android:id="@+id/SensorConnection1"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:layout_row="1"
+                    android:layout_column="0"
+                    android:background="@color/unreliable"
+                    android:gravity="center"
+                    android:text="Disconnected"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/SensorConnection2"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:layout_row="1"
+                    android:layout_column="2"
+                    android:background="@color/unreliable"
+                    android:gravity="center"
+                    android:text="Disconnected"
+                    android:textColor="@color/black" />
+                <Button
+                    android:id="@+id/s1Calibrate"
+                    android:layout_row="2"
+                    android:layout_column="0"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:text="Calibrate"
+                    android:backgroundTint="@color/primary2"
+                    android:textColor="@color/black"
+                    android:visibility="invisible"
+                    />
+                <Button
+                    android:id="@+id/s2Calibrate"
+                    android:layout_row="2"
+                    android:layout_column="2"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:text="Calibrate"
+                    android:backgroundTint="@color/primary2"
+                    android:textColor="@color/black"
+                    android:visibility="invisible"
+                    />
+
+            </GridLayout>
+            <TextView
+                android:id="@+id/blankSpace"
+                android:layout_width="250dp"
+                android:layout_height="20dp"/>
+            <Button
+                android:id="@+id/connect"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:text="Connect"
+                android:textSize="25sp"
+                android:backgroundTint="@color/orange"
+                android:textColor="@color/white"/>
+            <Button
+                android:id="@+id/metrics"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:text="Next"
+                android:textSize="25sp"
+                android:backgroundTint="@color/orange"
+                android:textColor="@color/white"
+                android:visibility="visible"/>
+        </LinearLayout>
+
+    </ScrollView>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
