@@ -33,7 +33,7 @@ public class HubActivity extends AppCompatActivity {
         // Set initial fragment
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.hub_container, new WIPFragment()) // TODO: Set this to the activity selection page
+                    .replace(R.id.hub_container, new ActivitySelectionFragment()) // TODO: Set this to the activity selection page
                     .commit();
         }
 
@@ -42,7 +42,7 @@ public class HubActivity extends AppCompatActivity {
         navMenu.setOnItemSelectedListener(item -> {
             Fragment selectedFragment;
             if (item.getItemId() == R.id.nav_activities) {
-                selectedFragment = new WIPFragment(); // TODO: Change to HomeFragment()
+                selectedFragment = new ActivitySelectionFragment(); // TODO: Change to HomeFragment()
             } else if (item.getItemId() == R.id.nav_data) {
                 selectedFragment = new WIPFragment(); // TODO: Change to PersonalDataFragment()
             } else if (item.getItemId() == R.id.nav_toDoList) {

@@ -26,24 +26,18 @@ Button therapy, stretching;
         stretching = view.findViewById(R.id.btn_stretching);
 
         //Therapy Button
-        therapy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(),ConnectionActivity.class);
-                startActivity(intent);
-                //getActivity().finish();
-            }
+        therapy.setOnClickListener(v -> {
+//                Intent intent = new Intent(getActivity(),ConnectionActivity.class);
+//                startActivity(intent);
+            //getActivity().finish();
         });
-        /*
+
         // Stretch Button
-        stretching.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v){
-                Intent intent = new Intent(getActivity(),StretchActivity.class);
-                startActivity(intent);
-            }
+        stretching.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), WIPActivity.class);
+            startActivity(intent);
         });
-        */
+
 
         return view;
     }
