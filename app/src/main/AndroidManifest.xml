@@ -13,6 +13,9 @@
         android:theme="@style/Theme.ETherapyII"
         tools:targetApi="31">
         <activity
+            android:name=".WIPActivity"
+            android:exported="false" />
+        <activity
             android:name=".HubActivity"
             android:exported="false" />
         <activity

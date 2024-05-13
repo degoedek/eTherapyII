@@ -58,7 +58,7 @@ public class WelcomeScreen extends Fragment {
         //Welcome Button
         welcomeButton.setOnClickListener(v1 -> {
             //startActivity(new Intent(getActivity(), LoginActivity.class));
-//                startActivity(new Intent(getActivity(), LogInHubActivity.class));
+                startActivity(new Intent(getActivity(), HubActivity.class));
         });
 
         return v;
