@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Calibrate"
+        android:textSize="36sp" />
+
+    <GridLayout
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center">
+
+        <ImageView
+            android:id="@+id/s2AccelImage"
+            android:layout_width="100dp"
+            android:layout_height="65dp"
+            android:layout_row="0"
+            android:layout_column="0"
+            android:paddingTop="5dp"
+            android:src="@drawable/connection_status_unreliable" />
+
+        <TextView
+            android:id="@+id/s2AccelStatus"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_row="1"
+            android:layout_column="0"
+            android:gravity="center"
+            android:text="Accelerometer: Unreliable" />
+
+
+
+        <ImageView
+            android:id="@+id/s2GyroImage"
+            android:layout_width="100dp"
+            android:layout_height="65dp"
+            android:layout_row="2"
+            android:layout_column="0"
+            android:paddingTop="5dp"
+            android:src="@drawable/connection_status_unreliable" />
+
+        <TextView
+            android:id="@+id/s2GyroStatus"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_row="3"
+            android:layout_column="0"
+            android:gravity="center"
+            android:text="Gyroscope: Unreliable" />
+
+        <ImageView
+            android:id="@+id/s2MagnetImage"
+            android:layout_width="100dp"
+            android:layout_height="65dp"
+            android:layout_row="4"
+            android:layout_column="0"
+            android:paddingTop="5dp"
+            android:src="@drawable/connection_status_unreliable" />
+
+        <TextView
+            android:id="@+id/s2MagnetStatus"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_row="5"
+            android:layout_column="0"
+            android:gravity="center"
+            android:text="Magnetometer: Unreliable"
+            />
+
+        <pl.droidsonroids.gif.GifImageView
+            android:id="@+id/accelInstructions"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/accel_calibration"
+            android:layout_row="0"
+            android:layout_column="3"
+            android:layout_rowSpan="2"/>
+        <TextView
+            android:id="@+id/accelTxtInstructions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rotate 45°"
+            android:textColor="@color/black"
+            android:background="@color/primary2"
+            android:layout_gravity="bottom"
+            android:layout_row="1"
+            android:layout_column="3"/>
+
+        <ImageView
+            android:id="@+id/gyroInstructions"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/gyro_calibration"
+            android:layout_row="2"
+            android:layout_column="3"
+            android:layout_rowSpan="2"/>
+        <TextView
+            android:id="@+id/gyroTxtInstructions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lay flat"
+            android:textColor="@color/black"
+            android:background="@color/primary2"
+            android:layout_gravity="bottom"
+            android:layout_row="3"
+            android:layout_column="3"/>
+
+
+        <pl.droidsonroids.gif.GifImageView
+            android:id="@+id/magnetInstructions"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/magnetometer_calibration"
+            android:layout_row="4"
+            android:layout_column="3"
+            android:layout_rowSpan="2"/>
+        <TextView
+            android:id="@+id/magnetTxtInstructions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Repeat Motion"
+            android:textColor="@color/black"
+            android:background="@color/primary2"
+            android:layout_gravity="bottom"
+            android:layout_row="5"
+            android:layout_column="3"/>
+    </GridLayout>
+    <TextView
+        android:id="@+id/blankSpace2"
+        android:layout_width="25dp"
+        android:layout_height="5dp"
+        />
+    <TextView
+        android:id="@+id/requirementsTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Get all components to High Accuracy to proceed"
+        android:textSize="10sp"/>
+    <Button
+        android:id="@+id/close"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Close"
+        android:textSize="30sp"
+        android:layout_gravity="center"
+        android:visibility="invisible"/>
+    <TextView
+        android:id="@+id/blankSpace3"
+        android:layout_width="25dp"
+        android:layout_height="10dp"/>
+
+</LinearLayout>

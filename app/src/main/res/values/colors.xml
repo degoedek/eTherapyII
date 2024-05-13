@@ -47,8 +47,6 @@
     <color name="lightgreen">#C8E6C9</color>
 
 <!--  eRunner Colors  -->
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
     <color name="whitebg">#30FFFFFF</color>
 
     <!--  PRIMARY  -->

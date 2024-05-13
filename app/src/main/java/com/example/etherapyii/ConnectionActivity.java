@@ -70,7 +70,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
             Thread connectThread = new Thread(() -> {
                 Log.i("ConnectionPage", "Connect thread started");
-                getApplicationContext().bindService(new Intent(ConnectionPage.this, BtleService.class), ConnectionPage.this, Context.BIND_AUTO_CREATE);
+                getApplicationContext().bindService(new Intent(ConnectionActivity.this, BtleService.class), ConnectionActivity.this, Context.BIND_AUTO_CREATE);
 
 
                 if (!s1Connected) {
@@ -83,8 +83,9 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             connectThread.start();
         });
         metrics.setOnClickListener(view -> {
-            Intent intent = new Intent(ConnectionActivity.this, MetricsPage.class);
-            startActivity(intent);
+            // TODO: Make navigation to next page
+//            Intent intent = new Intent(ConnectionActivity.this, MetricsPage.class);
+//            startActivity(intent);
         });
 
         //Calibration Listeners:
@@ -106,6 +107,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     }
 
     public void retrieveBoard() {
+        // TODO: Convert this to a bluetooth scan rather than hard-coding MAC Addresses
         final BluetoothManager btManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         String macAddress1 = "ED:5B:0A:50:14:59";
         String macAddress2 = "FE:C2:4B:10:FB:D5";
@@ -325,8 +327,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                     //Lengths: H = 13, U = 10, M = 15, L = 12
                     //More lengths: Accelerometer first letter = 35, gyroscope is an additional 13 chars after accelState, magnetometer is an additional 16 or 17 chars after gyroState
                     char accelLetter = calibrationState.charAt(nextStateLoc);
-//                System.out.println();
-//                System.out.println(accelLetter + " Accelletter!!!!!!!!!!!!!");
+
                     switch (accelLetter) {
                         case 'H':
                             s1AccelStatus.setText("Accelerometer: High Accuracy");
@@ -350,7 +351,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                             break;
                     }
                     char gyroLetter = calibrationState.charAt(nextStateLoc);
-//                System.out.println(gyroLetter + " Gyroletter!!!!!!!!!!!!!");
+
                     switch (gyroLetter) {
                         case 'H':
                             s1GyroStatus.setText("Gyroscope: High Accuracy");
@@ -374,7 +375,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                             break;
                     }
                     char magnetLetter = calibrationState.charAt(nextStateLoc);
-//                System.out.println(magnetLetter + " Magnetletter!!!!!!!!!!!!!");
+
                     switch (magnetLetter) {
                         case 'H':
                             s1MagnetStatus.setText("Magnetometer: High Accuracy");
@@ -416,7 +417,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
                         if (s1Calibrated && s2Calibrated) metrics.setVisibility(View.VISIBLE);
                     }
-//                        calibrationStateTV.setText(calibrationState);
+
                 });
 
                 Log.i("MainActivity", "Sensor 1 - " + calibrationState);
