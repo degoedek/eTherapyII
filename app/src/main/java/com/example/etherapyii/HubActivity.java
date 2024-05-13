@@ -30,35 +30,29 @@ public class HubActivity extends AppCompatActivity {
             return insets;
         });
 
+        // Set initial fragment
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.hub_container, new WIPFragment()) // TODO: Set this to the activity selection page
+                    .commit();
+        }
+
         //Fragment Navigation
         BottomNavigationView navMenu = findViewById(R.id.nav_menu);
         navMenu.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
+            Fragment selectedFragment;
             if (item.getItemId() == R.id.nav_activities) {
-                selectedFragment = new HomeFragment();
+                selectedFragment = new WIPFragment(); // TODO: Change to HomeFragment()
             } else if (item.getItemId() == R.id.nav_data) {
-                selectedFragment = new WIPFragment();
+                selectedFragment = new WIPFragment(); // TODO: Change to PersonalDataFragment()
+            } else if (item.getItemId() == R.id.nav_toDoList) {
+                selectedFragment = new WIPFragment(); // TODO: Change to ToDoListFragment()
             }
-            // TODO: FINISH CONVERTING SWITCH TO IF
-
-
-//            switch(item.getItemId()) {
-//                case R.id.nav_activities:
-                    //selectedFragment = new ActivitySelectionFragment();
-
-//                    break;
-//                case R.id.nav_data:
-//                    selectedFragment = new PersonalDataFragment();
-//                    break;
-//                case R.id.nav_toDoList:
-//                    selectedFragment = new ToDoListFragment();
-//                    break;
-//                default:
-//                    selectedFragment = new ActivitySelectionFragment();
-//                    break;
-//            }
+            // Default
+            else {
+                selectedFragment = new WIPFragment(); // TODO: Change to ActivitySelectionFragment()
+            }
             getSupportFragmentManager().beginTransaction().replace(R.id.hub_container,selectedFragment).commit();
-            //Selects item
             return true;
         });
 
