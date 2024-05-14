@@ -52,6 +52,7 @@ public class TherapyDescription extends AppCompatActivity {
         });
         startActivity.setOnClickListener(view -> {
             Intent intentNav = new Intent(TherapyDescription.this, SensorPlacement.class);
+            intentNav.putExtra("Therapy", therapy);
             startActivity(intentNav);
         });
     }

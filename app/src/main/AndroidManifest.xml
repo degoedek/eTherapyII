@@ -28,10 +28,10 @@
         android:theme="@style/Theme.ETherapyII"
         tools:targetApi="31">
         <activity
-            android:name=".TherapyDescription"
+            android:name=".TherapyActivity"
             android:exported="false" />
         <activity
-            android:name=".description"
+            android:name=".TherapyDescription"
             android:exported="false" />
         <activity
             android:name=".SensorPlacement"
