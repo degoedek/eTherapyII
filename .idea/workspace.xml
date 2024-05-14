@@ -82,14 +82,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de878f84-49ff-46a3-a0a0-3d4ca6f2a0ad" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyDescription.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapySelection.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapySelection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/sensor_placement.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/SensorPlacement.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/therapy_description.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_sensor_placement.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_sensor_placement.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_therapy_description.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_therapy_description.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/SensorPlacement.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/SensorPlacement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyDescription.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyDescription.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +93,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\aroop\.android\avd\Pixel_3a_API_34.avd)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=PhysicalDevice, isTemplate=false, identifier=serial=R5CTA38EBNM)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
