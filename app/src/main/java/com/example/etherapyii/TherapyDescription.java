@@ -15,7 +15,7 @@ import java.util.Objects;
 
 public class TherapyDescription extends AppCompatActivity {
     final String HOTT = "Head Orientation Therapy Tool";
-    final String HOTT_description = "TODO: ENTER DESCRIPTION";
+    final String HOTT_description = "The user will move their hand to a desired location, which will become the target location on the screen. After the hand/sensor is in the desired spot, there will be a green indicator for the sensor on the users head, to which the user will rotate to fit inside of the target. Once the two circles coincide for a short period of time a repetition will be counted, and the sensor on the users hand will vibrate.";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
