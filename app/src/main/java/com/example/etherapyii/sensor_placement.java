@@ -56,6 +56,9 @@ public class sensor_placement extends AppCompatActivity {
             startActivity(intent2);
         });
 
+        SeekBar seekBar = findViewById(R.id.seekBar);
+        TextView valueLabel = findViewById(R.id.valueLabel);
+
 
 
 
