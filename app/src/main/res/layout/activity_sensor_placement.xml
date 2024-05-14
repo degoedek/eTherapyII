@@ -49,17 +49,18 @@
         app:layout_constraintTop_toBottomOf="@+id/set_num_reps" />
 
     <TextView
-        android:id="@+id/reps_valueLabel"
+        android:id="@+id/reps_value_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="18dp"
+        android:layout_marginTop="76dp"
         android:text="0"
         android:textColor="@android:color/black"
         android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/set_num_reps"
-        tools:layout_editor_absoluteY="76dp" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/hott_hand"
