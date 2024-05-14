@@ -26,7 +26,7 @@ public class TherapySelection extends AppCompatActivity {
         Button Hott = findViewById(R.id.HOTT);
 
         Hott.setOnClickListener(v -> {
-            Intent intent = new Intent(TherapySelection.this, sensor_placement.class);
+            Intent intent = new Intent(TherapySelection.this, TherapyDescription.class);
             intent.putExtra("Therapy", "Hott");
             startActivity(intent);
         });

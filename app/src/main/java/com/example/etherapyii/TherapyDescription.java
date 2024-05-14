@@ -2,9 +2,8 @@ package com.example.etherapyii;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,24 +13,26 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.util.Objects;
 
-public class sensor_placement extends AppCompatActivity {
-
+public class TherapyDescription extends AppCompatActivity {
+    final String HOTT = "Head Orientation Therapy Tool";
+    final String HOTT_description = "TODO: ENTER DESCRIPTION";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_sensor_placement);
+        setContentView(R.layout.activity_therapy_description);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        // Variable Declarations
+        // Variable Declaration
+        Button back = findViewById(R.id.back);
+        Button startActivity = findViewById(R.id.start_activity);
+        TextView titleTV = findViewById(R.id.description_title);
+        TextView descriptionTV = findViewById(R.id.description_body);
         String therapy;
-        ImageView hand_image;
-        ImageView human_image;
-        Button start_activity;
 
         // Getting Metric From Therapy Selection
         Intent intent = getIntent();
@@ -40,24 +41,18 @@ public class sensor_placement extends AppCompatActivity {
         // Setting Images on Therapy
         switch (Objects.requireNonNull(therapy)) {
             case "Hott":
-                Log.i("Hott", "Switch enterred - case 'Hott'");
-                hand_image = findViewById(R.id.hott_hand);
-                human_image = findViewById(R.id.hott_human);
-                hand_image.setImageResource(R.drawable.hott_hand);
-                human_image.setImageResource(R.drawable.hott_human);
+                titleTV.setText(HOTT);
+                descriptionTV.setText(HOTT_description);
                 break;
         }
 
-        // Next Activity Navigation
-        start_activity = findViewById(R.id.start_activity);
-        start_activity.setOnClickListener(v -> {
-            Intent intent2 = new Intent(sensor_placement.this, TherapyActivity.class);
-            intent2.putExtra("Therapy" , therapy);
-            startActivity(intent2);
+        back.setOnClickListener(view -> {
+            Intent intentNav = new Intent(TherapyDescription.this, TherapySelection.class);
+            startActivity(intentNav);
         });
-
-
-
-
+        startActivity.setOnClickListener(view -> {
+            Intent intentNav = new Intent(TherapyDescription.this, SensorPlacement.class);
+            startActivity(intentNav);
+        });
     }
 }
