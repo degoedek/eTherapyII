@@ -47,6 +47,9 @@ public class sensor_placement extends AppCompatActivity {
         }
 
 
+        // TODO: Add button to move to next activity
+
+
 
     }
 }
