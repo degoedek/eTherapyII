@@ -1,6 +1,8 @@
 package com.example.etherapyii;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,5 +22,27 @@ public class TherapyActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // Variable Declaration
+        TextView titleTV = findViewById(R.id.titleTV);
+        TextView repsTV = findViewById(R.id.repsTV);
+        TextView timeTV = findViewById(R.id.timeTV);
+        String therapyType;
+
+        // Get Intent
+        Intent intent = getIntent();
+        therapyType = intent.getExtras().getString("Therapy");
+
+        // Set Title
+        switch (therapyType) {
+            case "Hott":
+                titleTV.setText("Head Orientation\nTherapy Tool");
+                break;
+            default:
+                titleTV.setText("Placeholder");
+        }
+
+
+
     }
 }
