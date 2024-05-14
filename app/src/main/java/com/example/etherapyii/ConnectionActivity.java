@@ -44,7 +44,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     boolean s1Calibrated = false;
     boolean s2Calibrated = false;
     int connectionColor = Color.parseColor("#FF26FF00");
-    Button metrics;
+    Button next;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +57,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
         //Buttons
         Button connect = findViewById(R.id.connect);
-        metrics = findViewById(R.id.metrics);
+        next = findViewById(R.id.next_btn);
 
         //Bind the service when the activity is created
         getApplicationContext().bindService(new Intent(this, BtleService.class), this, Context.BIND_AUTO_CREATE);
@@ -83,10 +83,10 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             connectThread.start();
         });
 
-        metrics.setOnClickListener(view -> {
+        next.setOnClickListener(view -> {
             // TODO: Make navigation to next page
-//            Intent intent = new Intent(ConnectionActivity.this, MetricsPage.class);
-//            startActivity(intent);
+            Intent intent = new Intent(ConnectionActivity.this, TherapySelection.class);
+            startActivity(intent);
         });
 
         //Calibration Listeners:
@@ -122,9 +122,9 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
     public void connectBoard() {
         board.connectAsync().continueWith(new Continuation<Void, Void>() {
-            TextView sensorConnection1 = findViewById(R.id.SensorConnection1);
-            Button connect = findViewById(R.id.connect);
-            Button s1Calibrate = findViewById(R.id.s1Calibrate);
+            final TextView sensorConnection1 = findViewById(R.id.SensorConnection1);
+            final Button connect = findViewById(R.id.connect);
+            final Button s1Calibrate = findViewById(R.id.s1Calibrate);
 
 
             @Override
@@ -416,7 +416,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                         sensorConnection1.setText("Connected Calibrated");
                         close.setVisibility(View.VISIBLE);
 
-                        if (s1Calibrated && s2Calibrated) metrics.setVisibility(View.VISIBLE);
+                        if (s1Calibrated && s2Calibrated) next.setVisibility(View.VISIBLE);
                     }
 
                 });
@@ -590,7 +590,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                         sensorConnection2.setText("Connected Calibrated");
                         close.setVisibility(View.VISIBLE);
 
-                        if (s1Calibrated && s2Calibrated) metrics.setVisibility(View.VISIBLE);
+                        if (s1Calibrated && s2Calibrated) next.setVisibility(View.VISIBLE);
                     }
                 });
 

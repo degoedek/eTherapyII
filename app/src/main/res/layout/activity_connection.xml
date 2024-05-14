@@ -26,7 +26,7 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:paddingBottom="13dp"
-                android:text="Connect Sensors"
+                android:text="@string/connect_sensors"
                 android:textSize="36sp"/>
 
             <GridLayout
@@ -42,7 +42,7 @@
                     android:layout_column="0"
                     android:background="@color/white"
                     android:gravity="center"
-                    android:text="Sensor 1"
+                    android:text="@string/sensor_1"
                     android:textColor="@color/black"
                     android:textSize="18sp" />
 
@@ -54,7 +54,7 @@
                     android:layout_column="2"
                     android:background="@color/white"
                     android:gravity="center"
-                    android:text="Sensor 2"
+                    android:text="@string/sensor_2"
                     android:textColor="@color/black"
                     android:textSize="18sp" />
             </GridLayout>
@@ -87,7 +87,7 @@
                     android:layout_row="0"
                     android:layout_column="0"
                     android:paddingTop="2dp"
-                    android:text="      %" />
+                    android:text="@string/battery_percent" />
 
                 <ImageView
                     android:id="@+id/mmrl2"
@@ -112,7 +112,7 @@
                     android:layout_row="0"
                     android:layout_column="2"
                     android:paddingTop="2dp"
-                    android:text="      %" />
+                    android:text="@string/battery_percent" />
 
                 <TextView
                     android:id="@+id/SensorConnection1"
@@ -122,7 +122,7 @@
                     android:layout_column="0"
                     android:background="@color/unreliable"
                     android:gravity="center"
-                    android:text="Disconnected"
+                    android:text="@string/disconnected"
                     android:textColor="@color/black" />
 
                 <TextView
@@ -133,7 +133,7 @@
                     android:layout_column="2"
                     android:background="@color/unreliable"
                     android:gravity="center"
-                    android:text="Disconnected"
+                    android:text="@string/disconnected"
                     android:textColor="@color/black" />
                 <Button
                     android:id="@+id/s1Calibrate"
@@ -141,7 +141,7 @@
                     android:layout_column="0"
                     android:layout_width="110dp"
                     android:layout_height="wrap_content"
-                    android:text="Calibrate"
+                    android:text="@string/calibrate"
                     android:backgroundTint="@color/primary2"
                     android:textColor="@color/black"
                     android:visibility="invisible"
@@ -152,7 +152,7 @@
                     android:layout_column="2"
                     android:layout_width="110dp"
                     android:layout_height="wrap_content"
-                    android:text="Calibrate"
+                    android:text="@string/calibrate"
                     android:backgroundTint="@color/primary2"
                     android:textColor="@color/black"
                     android:visibility="invisible"
@@ -168,16 +168,16 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:layout_gravity="center"
-                android:text="Connect"
+                android:text="@string/connect"
                 android:textSize="25sp"
                 android:backgroundTint="@color/orange"
                 android:textColor="@color/white"/>
             <Button
-                android:id="@+id/metrics"
+                android:id="@+id/next_btn"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:layout_gravity="center"
-                android:text="Next"
+                android:text="@string/next"
                 android:textSize="25sp"
                 android:backgroundTint="@color/orange"
                 android:textColor="@color/white"
