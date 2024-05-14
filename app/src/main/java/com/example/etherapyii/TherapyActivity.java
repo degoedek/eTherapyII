@@ -28,10 +28,14 @@ public class TherapyActivity extends AppCompatActivity {
         TextView repsTV = findViewById(R.id.repsTV);
         TextView timeTV = findViewById(R.id.timeTV);
         String therapyType;
+        int reps, repsCompleted = 0;
+        String repsText;
 
         // Get Intent
         Intent intent = getIntent();
         therapyType = intent.getExtras().getString("Therapy");
+//        reps = intent.getExtras().getInt("Reps"); //TODO ONCE SLIDER IS FIXED
+        reps = 10;
 
         // Set Title
         switch (therapyType) {
@@ -42,6 +46,9 @@ public class TherapyActivity extends AppCompatActivity {
                 titleTV.setText("Placeholder");
         }
 
+        // Set Reps
+        repsText = repsCompleted + "/" + reps;
+        repsTV.setText(repsText);
 
 
     }
