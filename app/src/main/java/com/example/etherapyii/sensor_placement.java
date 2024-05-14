@@ -48,13 +48,10 @@ public class sensor_placement extends AppCompatActivity {
                 break;
         }
 
-
-        // TODO: Add button to move to next activity
-
+        // Next Activity Navigation
         start_activity = findViewById(R.id.start_activity);
-
         start_activity.setOnClickListener(v -> {
-            Intent intent2 = new Intent(sensor_placement.this, sensor_placement.class);
+            Intent intent2 = new Intent(sensor_placement.this, TherapyActivity.class);
             intent2.putExtra("Therapy" , therapy);
             startActivity(intent2);
         });
