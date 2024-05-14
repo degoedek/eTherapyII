@@ -53,8 +53,13 @@ public class SensorPlacement extends AppCompatActivity {
         // Next Activity Navigation
         start_activity = findViewById(R.id.start_activity);
         start_activity.setOnClickListener(v -> {
+            // Getting Value from SeekBar
+            SeekBar seekBar = findViewById(R.id.reps_input);
+            int reps = seekBar.getProgress();
+
             Intent intent2 = new Intent(SensorPlacement.this, TherapyActivity.class);
             intent2.putExtra("Therapy" , therapy);
+            intent2.putExtra("Reps" , reps);
             startActivity(intent2);
         });
 

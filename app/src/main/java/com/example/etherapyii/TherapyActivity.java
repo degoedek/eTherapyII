@@ -34,8 +34,8 @@ public class TherapyActivity extends AppCompatActivity {
         // Get Intent
         Intent intent = getIntent();
         therapyType = intent.getExtras().getString("Therapy");
-//        reps = intent.getExtras().getInt("Reps"); //TODO ONCE SLIDER IS FIXED
-        reps = 10;
+        reps = intent.getExtras().getInt("Reps"); //TODO ONCE SLIDER IS FIXED
+
 
         // Set Title
         switch (therapyType) {
