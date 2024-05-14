@@ -3,6 +3,7 @@ package com.example.etherapyii;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
@@ -30,6 +31,7 @@ public class sensor_placement extends AppCompatActivity {
         String therapy;
         ImageView hand_image;
         ImageView human_image;
+        Button start_activity;
 
         // Getting Metric From Therapy Selection
         Intent intent = getIntent();
@@ -48,6 +50,15 @@ public class sensor_placement extends AppCompatActivity {
 
 
         // TODO: Add button to move to next activity
+
+        start_activity = findViewById(R.id.start_activity);
+
+        start_activity.setOnClickListener(v -> {
+            Intent intent2 = new Intent(sensor_placement.this, sensor_placement.class);
+            intent2.putExtra("Therapy" , therapy);
+            startActivity(intent2);
+        });
+
 
 
 
