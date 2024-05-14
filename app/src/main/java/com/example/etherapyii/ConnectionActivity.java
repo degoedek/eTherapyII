@@ -82,6 +82,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             });
             connectThread.start();
         });
+
         metrics.setOnClickListener(view -> {
             // TODO: Make navigation to next page
 //            Intent intent = new Intent(ConnectionActivity.this, MetricsPage.class);
