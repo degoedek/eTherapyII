@@ -14,7 +14,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.util.Objects;
 
-public class sensor_placement extends AppCompatActivity {
+public class SensorPlacement extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +51,7 @@ public class sensor_placement extends AppCompatActivity {
         // Next Activity Navigation
         start_activity = findViewById(R.id.start_activity);
         start_activity.setOnClickListener(v -> {
-            Intent intent2 = new Intent(sensor_placement.this, TherapyActivity.class);
+            Intent intent2 = new Intent(SensorPlacement.this, TherapyActivity.class);
             intent2.putExtra("Therapy" , therapy);
             startActivity(intent2);
         });
