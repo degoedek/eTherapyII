@@ -21,7 +21,7 @@
     <string name="connect">Connect</string>
     <string name="calibrate">Calibrate</string>
     <string name="disconnected">Disconnected</string>
-    <string name="battery_percent">%</string>
+    <string name="battery_percent">    %</string>
     <string name="sensor_2">Sensor 2</string>
     <string name="sensor_1">Sensor 1</string>
     <string name="connect_sensors">Connect Sensors</string>
