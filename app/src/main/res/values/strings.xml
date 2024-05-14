@@ -25,4 +25,6 @@
     <string name="sensor_1">Sensor 1</string>
     <string name="connect_sensors">Connect Sensors</string>
     <string name="start_activity">Start Activity</string>
+    <string name="number_of_repetitions">Number of repetitions:</string>
+    <string name="number_of_sets">Number of sets:</string>
 </resources>

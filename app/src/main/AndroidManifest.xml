@@ -28,6 +28,12 @@
         android:theme="@style/Theme.ETherapyII"
         tools:targetApi="31">
         <activity
+            android:name=".therapy_description"
+            android:exported="false" />
+        <activity
+            android:name=".description"
+            android:exported="false" />
+        <activity
             android:name=".sensor_placement"
             android:exported="false" />
         <activity

@@ -10,7 +10,7 @@
     >
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/sensor_placement"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -23,6 +23,33 @@
         app:layout_constraintTop_toTopOf="parent" />
 
 
+
+
+    <TextView
+        android:id="@+id/set_num_reps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="84dp"
+        android:gravity="center"
+        android:text="@string/number_of_repetitions"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <SeekBar
+        android:id="@+id/reps_input"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:max="30"
+        android:min="1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/set_num_reps" />
+
     <ImageView
         android:id="@+id/hott_hand"
         android:layout_width="210dp"
@@ -32,7 +59,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
 
-        />
+        app:layout_constraintVertical_bias="0.43" />
 
     <ImageView
         android:id="@+id/hott_human"
@@ -42,7 +69,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintVertical_bias="0.433" />
 
     <Button
         android:id="@+id/start_activity"
