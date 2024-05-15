@@ -58,9 +58,10 @@ public class TherapyActivity extends AppCompatActivity {
                 titleTV.setText("Placeholder: Add title");
         }
 
-        // Set Reps
+        // Set Reps/Initial time
         repsText = repsCompleted + "/" + reps;
         repsTV.setText(repsText);
+        timeTV.setText("0:00");
 
         handler = new Handler(Looper.getMainLooper());
 
@@ -69,6 +70,7 @@ public class TherapyActivity extends AppCompatActivity {
             isClockRunning = true;
             startTime = currentTimeMillis();
             startClock(timeTV);
+            beginButton.setVisibility(View.GONE);
             stopButton.setVisibility(View.VISIBLE);
         });
 
