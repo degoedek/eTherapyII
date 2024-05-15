@@ -4,6 +4,8 @@ import static java.lang.System.currentTimeMillis;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -14,11 +16,13 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 public class TherapyActivity extends AppCompatActivity {
 
-    public boolean isClockRunning = false;
+    private boolean isClockRunning = false;
+    private String time;
+    private Handler handler;
+    private long startTime;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +37,7 @@ public class TherapyActivity extends AppCompatActivity {
         // Variable Declaration
         TextView titleTV = findViewById(R.id.titleTV);
         TextView repsTV = findViewById(R.id.repsTV);
+        TextView timeTV = findViewById(R.id.timeTV);
         Button beginButton = findViewById(R.id.beginButton);
         Button stopButton = findViewById(R.id.btn_stop);
         String therapyType;
@@ -43,7 +48,6 @@ public class TherapyActivity extends AppCompatActivity {
         Intent intent = getIntent();
         therapyType = intent.getExtras().getString("Therapy");
         reps = intent.getExtras().getInt("Reps");
-
 
         // Set Title
         switch (therapyType) {
@@ -58,49 +62,35 @@ public class TherapyActivity extends AppCompatActivity {
         repsText = repsCompleted + "/" + reps;
         repsTV.setText(repsText);
 
-        // Thread Creation
-        Thread timeThread = new Thread() {
-            public void run() {
-                startClock();
-            }
-        };
+        handler = new Handler(Looper.getMainLooper());
 
         // Button Listeners
         beginButton.setOnClickListener(view -> {
-            timeThread.start();
+            isClockRunning = true;
+            startTime = currentTimeMillis();
+            startClock(timeTV);
             stopButton.setVisibility(View.VISIBLE);
         });
 
         stopButton.setOnClickListener(view -> {
-            timeThread.interrupt();
+            isClockRunning = false;
+            stopButton.setVisibility(View.GONE);
         });
-
     }
 
-    private void startClock() {
-        TextView timeTV = findViewById(R.id.timeTV);
-        long startTime = currentTimeMillis();
+    private void startClock(TextView timeTV) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (isClockRunning) {
+                    long elapsedMillis = currentTimeMillis() - startTime;
+                    int seconds = (int) (elapsedMillis / 1000) % 60;
+                    int minutes = (int) ((elapsedMillis / (1000 * 60)) % 60);
 
-        runOnUiThread(() -> {
-            int minutes = 0;
-            int seconds = 0;
-            String time;
+                    time = String.format("%d:%02d", minutes, seconds);
+                    timeTV.setText(time);
 
-            while (!Thread.currentThread().isInterrupted()) {
-                time = minutes + ":" + seconds;
-                timeTV.setText(time);
-                seconds = (int) ((currentTimeMillis() - startTime) / 1000);
-
-                if (seconds >= 60) {
-                    minutes++;
-                    seconds = 0;
-                }
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // Handle interruption and terminate gracefully
-                    break;
+                    handler.postDelayed(this, 1000); // Update every second
                 }
             }
         });
