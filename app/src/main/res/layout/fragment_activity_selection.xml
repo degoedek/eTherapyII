@@ -52,7 +52,6 @@
         android:text="Choose Activity"
         android:textAlignment="center"
         android:textAllCaps="true"
-        android:textColor="@color/purple_500"
         android:textSize="40sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
