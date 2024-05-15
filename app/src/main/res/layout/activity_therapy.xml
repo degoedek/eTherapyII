@@ -65,10 +65,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:alpha="0.75"
-
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-
         app:srcCompat="@drawable/circle_user_with_notch" />
 
     <Button
@@ -85,5 +83,22 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_stop"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginEnd="76dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/ic_octagon"
+        android:text="Stop"
+        android:textSize="17sp"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
