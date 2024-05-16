@@ -220,6 +220,9 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         board2 = serviceBinder.getMetaWearBoard(sensor2);
     }
 
+
+
+
     public Quaternion multiplyQuat(Quaternion q1, Quaternion q2) {
         float w3, w2, w1, x3, x2, x1, y3, y2, y1, z3, z2, z1;
         w1 = q1.w();
