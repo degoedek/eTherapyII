@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -40,13 +41,14 @@ import bolts.Task;
 
 public class TherapyActivity extends AppCompatActivity implements ServiceConnection {
     private BtleService.LocalBinder serviceBinder;
-    private boolean isClockRunning = false;
+    private boolean isClockRunning = false, started = false;
     private String time;
     private Handler handler;
     private long startTime;
     private MetaWearBoard board, board2;
     Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
     Boolean s1QuatSet = false, s2QuatSet = false;
+    int timeLeft;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,18 +97,11 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
         // Button Listeners
         beginButton.setOnClickListener(view -> {
-            // Start Clock
-            isClockRunning = true;
-            startTime = currentTimeMillis();
-            startClock(timeTV);
-
-            // Sensor Fusion
-            sensorFusion(board, 1);
-            sensorFusion(board2, 2);
-
-            // Adjusting Button Visibility
-            beginButton.setVisibility(View.GONE);
-            stopButton.setVisibility(View.VISIBLE);
+            if (!started) {
+                Log.i("TherapyActivity", "Checkpoint 1");
+                started = true;
+                startCountdown();
+            }
         });
 
         stopButton.setOnClickListener(view -> {
@@ -115,6 +110,54 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
             // Adjusting Button Visibility
             stopButton.setVisibility(View.GONE);
         });
+    }
+
+    public void startCountdown() {
+        Log.i("TherapyActivity", "Checkpoint 2");
+        final long[] countdownDuration = {3000};
+        Button poseButton = findViewById(R.id.beginButton);
+
+        CountDownTimer mCountDownTimer = new CountDownTimer(countdownDuration[0], 1000) {
+            @Override
+            public void onTick(long l) {
+                Log.i("TherapyActivity", "Checkpoint 3");
+                countdownDuration[0] = l;
+                timeLeft = ((int) countdownDuration[0] + 100) / 1000;
+
+
+
+                String timeRemaining = "Pose\n" + timeLeft;
+                poseButton.setText(timeRemaining);
+
+                if (timeLeft == 5) {
+                    String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
+                    Log.i("TherapyActivity", tlString);
+//                    getPose();
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                TextView timeTV = findViewById(R.id.timeTV);
+                Button beginButton = findViewById(R.id.beginButton);
+                Button stopButton = findViewById(R.id.btn_stop);
+                Log.i("TherapyActivity", "Checkpoint 4");
+
+
+                // Start Clock
+                isClockRunning = true;
+                startTime = currentTimeMillis();
+                startClock(timeTV);
+
+                // Sensor Fusion
+                sensorFusion(board, 1);
+                sensorFusion(board2, 2);
+
+                // Adjusting Button Visibility
+                beginButton.setVisibility(View.GONE);
+                stopButton.setVisibility(View.VISIBLE);
+            }
+        }.start();
     }
 
     private void startClock(TextView timeTV) {
@@ -149,44 +192,44 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         // stream quaternion values from the board
         sf.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
 //            Log.i("MainActivity", "Board: " + sensorNum + " - Quaternion = " + data.value(Quaternion.class));
-            // Assigning quaternion values to respective variables based on sensor
-            switch (sensorNum) {
-                case 1:
-                    s1CurrentQuat = data.value(Quaternion.class);
-                    if (!s1QuatSet) {
-                        s1Pose = s1CurrentQuat;
-                        Log.i("MainActivity", "S1 Pose - " + s1Pose);
+                    // Assigning quaternion values to respective variables based on sensor
+                    switch (sensorNum) {
+                        case 1:
+                            s1CurrentQuat = data.value(Quaternion.class);
+                            if (!s1QuatSet) {
+                                s1Pose = s1CurrentQuat;
+                                Log.i("MainActivity", "S1 Pose - " + s1Pose);
 
+                            }
+                            s1QuatSet = true;
+                            break;
+                        case 2:
+                            s2CurrentQuat = data.value(Quaternion.class);
+                            if (!s2QuatSet) {
+                                s2Pose = s2CurrentQuat;
+                                Log.i("MainActivity", "S2 Pose - " + s2Pose);
+                            }
+                            s2QuatSet = true;
+                            break;
                     }
-                    s1QuatSet = true;
-                    break;
-                case 2:
-                    s2CurrentQuat = data.value(Quaternion.class);
-                    if (!s2QuatSet) {
-                        s2Pose = s2CurrentQuat;
-                        Log.i("MainActivity", "S2 Pose - " + s2Pose);
-                    }
-                    s2QuatSet = true;
-                    break;
-            }
 
-            if (s1QuatSet && s2QuatSet) {
-                RelativeRotationPose = findRelativeRotation(normalize(s1Pose), normalize(s2Pose));
+                    if (s1QuatSet && s2QuatSet) {
+                        RelativeRotationPose = findRelativeRotation(normalize(s1Pose), normalize(s2Pose));
 //                Log.i("TherapyActivity", "Relative Rotation - " + RelativeRotationPose);
-                RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
+                        RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
 //                Log.i("TherapyActivity", "Relative Rotation Current - " + RelativeRotationCurrent);
-                Log.i("TherapyActivity", "Distance - " + quaternionDistance(RelativeRotationPose, RelativeRotationCurrent));
+                        Log.i("TherapyActivity", "Distance - " + quaternionDistance(RelativeRotationPose, RelativeRotationCurrent));
 
-            }
+                    }
 
 
-        }))
-        .continueWith((Continuation<Route, Void>) task -> {
-            sf.resetOrientation();
-            sf.quaternion().start();
-            sf.start();
-            return null;
-        });
+                }))
+                .continueWith((Continuation<Route, Void>) task -> {
+                    sf.resetOrientation();
+                    sf.quaternion().start();
+                    sf.start();
+                    return null;
+                });
 
     }
 
