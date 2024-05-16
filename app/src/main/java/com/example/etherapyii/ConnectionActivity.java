@@ -65,9 +65,6 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
         //onClickListeners
         connect.setOnClickListener(view -> {
-            // Make Reset Button Visible
-            reset.setVisibility(View.VISIBLE);
-
             //Bind the service when the activity is created
             getApplicationContext().bindService(new Intent(this, BtleService.class), this, Context.BIND_AUTO_CREATE);
 
@@ -92,17 +89,23 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         });
 
         reset.setOnClickListener(view -> {
-            //Reset Button Invisible
-            reset.setVisibility(View.GONE);
-            connect.setVisibility(View.VISIBLE);
+            if (!s1Connected && !s2Connected) {
+                Toast.makeText(getApplicationContext(), "No Sensors Connected", Toast.LENGTH_SHORT).show();
+                return;
+            } else {
+                //Reset Button Invisible
+                connect.setVisibility(View.VISIBLE);
 
-            board.disconnectAsync();
-            board2.disconnectAsync();
+                board.disconnectAsync();
+                board2.disconnectAsync();
 
-            s1Connected = false;
-            s2Connected = false;
-            s1Calibrated = false;
-            s2Calibrated = false;
+                s1Connected = false;
+                s2Connected = false;
+                s1Calibrated = false;
+                s2Calibrated = false;
+
+                resetSensorUI();
+            }
         });
         //Calibration Listeners:
         s1CalibrationInflater();
@@ -250,39 +253,40 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         ImageView s2B = findViewById(R.id.s2battery);
 
         boardId.readBatteryLevelAsync().continueWith(task -> {
-            int bp = task.getResult();
+            int batteryPercentage = task.getResult();
 
-            Log.i("MainActivity", "Sensor " + sensorNum + " Battery Level: " + bp);
+            Log.i("MainActivity", "Sensor " + sensorNum + " Battery Level: " + batteryPercentage);
 
             //Updating UI
             runOnUiThread(() -> {
                 if (sensorNum == 1) {
-                    String stringS1BP = "      " + bp + "%";
+                    String stringS1BP = "      " + batteryPercentage + "%";
+                    Log.i("MainActivity", "Sensor 1 Case Entered");
                     s1BP.setText(stringS1BP);
 
                     //Updating Imaging
-                    if (75 < bp && bp <= 100) {
+                    if (75 < batteryPercentage && batteryPercentage <= 100) {
                         s1B.setImageResource(R.drawable.battery_full);
-                    } else if (50 < bp && bp <= 75) {
+                    } else if (50 < batteryPercentage && batteryPercentage <= 75) {
                         s1B.setImageResource(R.drawable.battery_medium);
-                    } else if (25 < bp && bp <= 50) {
+                    } else if (25 < batteryPercentage && batteryPercentage <= 50) {
                         s1B.setImageResource(R.drawable.battery_low);
-                    } else if (0 <= bp && bp <= 25) {
+                    } else if (0 <= batteryPercentage && batteryPercentage <= 25) {
                         s1B.setImageResource(R.drawable.battery_dead);
                     }
 
                 } else if (sensorNum == 2) {
-                    String stringS2BP = "      " + bp + "%";
+                    String stringS2BP = "      " + batteryPercentage + "%";
                     s2BP.setText(stringS2BP);
 
                     //Updating Imaging
-                    if (75 < bp && bp <= 100) {
+                    if (75 < batteryPercentage && batteryPercentage <= 100) {
                         s2B.setImageResource(R.drawable.battery_full);
-                    } else if (50 < bp && bp <= 75) {
+                    } else if (50 < batteryPercentage && batteryPercentage <= 75) {
                         s2B.setImageResource(R.drawable.battery_medium);
-                    } else if (25 < bp && bp <= 50) {
+                    } else if (25 < batteryPercentage && batteryPercentage <= 50) {
                         s2B.setImageResource(R.drawable.battery_low);
-                    } else if (0 <= bp && bp <= 25) {
+                    } else if (0 <= batteryPercentage && batteryPercentage <= 25) {
                         s2B.setImageResource(R.drawable.battery_dead);
                     }
                 } else Log.wtf("MainActivity", "Wrong sensor number!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -642,6 +646,65 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         TextView s2BatteryPercent = findViewById(R.id.s2batteryPercent);
         TextView s1ConnectedTV = findViewById(R.id.SensorConnection1);
         TextView s2ConnectedTV = findViewById(R.id.SensorConnection2);
+        Button s1Calibrate = findViewById(R.id.s1Calibrate);
+        Button s2Calibrate = findViewById(R.id.s2Calibrate);
+
+        // Sensor 1 Calibration Variables
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false);
+        View view2 = getLayoutInflater().inflate(R.layout.popup_s1_calibration_screen, null);
+        TextView s1AccelStatus = view2.findViewById(R.id.s1AccelStatus);
+        TextView s1GyroStatus = view2.findViewById(R.id.s1GyroStatus);
+        TextView s1MagnetStatus = view2.findViewById(R.id.s1MagnetStatus);
+        ImageView s1AccelImage = view2.findViewById(R.id.s1AccelImage);
+        ImageView s1GyroImage = view2.findViewById(R.id.s1GyroImage);
+        ImageView s1MagnetImage = view2.findViewById(R.id.s1MagnetImage);
+        Button s1close = view2.findViewById(R.id.close);
+
+        // Sensor 2 Calibration Variables
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+        builder1.setCancelable(false);
+        View view3 = getLayoutInflater().inflate(R.layout.popup_s2_calibration_screen, null);
+        TextView s2AccelStatus = view3.findViewById(R.id.s2AccelStatus);
+        TextView s2GyroStatus = view3.findViewById(R.id.s2GyroStatus);
+        TextView s2MagnetStatus = view3.findViewById(R.id.s2MagnetStatus);
+        ImageView s2AccelImage = view3.findViewById(R.id.s2AccelImage);
+        ImageView s2GyroImage = view3.findViewById(R.id.s2GyroImage);
+        ImageView s2MagnetImage = view3.findViewById(R.id.s2MagnetImage);
+        Button s2close = view3.findViewById(R.id.close);
+
+        // Resetting Base UI
+        s1BatteryDisplay.setImageResource(R.drawable.battery_unknown);
+        s2BatteryDisplay.setImageResource(R.drawable.battery_unknown);
+
+        s1BatteryPercent.setText("      %");
+        s2BatteryPercent.setText("      %");
+
+        s1ConnectedTV.setText("Disconnected");
+        s1ConnectedTV.setBackgroundColor(Color.parseColor("#FF0000"));
+        s2ConnectedTV.setText("Disconnected");
+        s2ConnectedTV.setBackgroundColor(Color.parseColor("#FF0000"));
+
+        s1Calibrate.setVisibility(View.INVISIBLE);
+        s2Calibrate.setVisibility(View.INVISIBLE);
+
+        // Resetting Sensor 1 Calibration UI
+        s1AccelImage.setImageResource(R.drawable.connection_status_unreliable);
+        s1AccelStatus.setText("Accelerometer: Unreliable");
+        s1GyroImage.setImageResource(R.drawable.connection_status_unreliable);
+        s1GyroStatus.setText("Gyroscope: Unreliable");
+        s1MagnetImage.setImageResource(R.drawable.connection_status_unreliable);
+        s1MagnetStatus.setText("Magnetometer: Unreliable");
+        s1close.setVisibility(View.INVISIBLE);
+
+        // Resetting Sensor 2 Calibration UI
+        s2AccelImage.setImageResource(R.drawable.connection_status_unreliable);
+        s2AccelStatus.setText("Accelerometer: Unreliable");
+        s2GyroImage.setImageResource(R.drawable.connection_status_unreliable);
+        s2GyroStatus.setText("Gyroscope: Unreliable");
+        s2MagnetImage.setImageResource(R.drawable.connection_status_unreliable);
+        s2MagnetStatus.setText("Magnetometer: Unreliable");
+
 
     }
 

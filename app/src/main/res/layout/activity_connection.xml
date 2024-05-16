@@ -190,7 +190,7 @@
                 android:text="Reset Sensors"
                 android:textSize="20sp"
                 android:backgroundTint="@color/orange"
-                android:visibility="gone"/>
+                android:visibility="visible"/>
 
         </LinearLayout>
 
