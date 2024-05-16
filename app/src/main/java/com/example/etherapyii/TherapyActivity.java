@@ -148,7 +148,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
         // stream quaternion values from the board
         sf.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
-            Log.i("MainActivity", "Board: " + sensorNum + " - Quaternion = " + data.value(Quaternion.class));
+//            Log.i("MainActivity", "Board: " + sensorNum + " - Quaternion = " + data.value(Quaternion.class));
             // Assigning quaternion values to respective variables based on sensor
             switch (sensorNum) {
                 case 1:
@@ -156,6 +156,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                     if (!s1QuatSet) {
                         s1Pose = s1CurrentQuat;
                         Log.i("MainActivity", "S1 Pose - " + s1Pose);
+
                     }
                     s1QuatSet = true;
                     break;
@@ -170,7 +171,12 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
             }
 
             if (s1QuatSet && s2QuatSet) {
-//                Log.i("MainActivity", "Relative Quaternion = " + findRelativeRotation(s2CurrentQuat, s1CurrentQuat));
+                RelativeRotationPose = findRelativeRotation(normalize(s1Pose), normalize(s2Pose));
+//                Log.i("TherapyActivity", "Relative Rotation - " + RelativeRotationPose);
+                RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
+//                Log.i("TherapyActivity", "Relative Rotation Current - " + RelativeRotationCurrent);
+                Log.i("TherapyActivity", "Distance - " + quaternionDistance(RelativeRotationPose, RelativeRotationCurrent));
+
             }
 
 
@@ -186,7 +192,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder service) {
-        Log.d("TAMeasurement", "Service Connected!!!!!!!!!!!!!!!!!!!!!!!");
+        Log.d("TAMeasurement", "Service Connected");
         //Typecast the binder to the service's LocalBinder class
         serviceBinder = (BtleService.LocalBinder) service;
         retrieveBoard();
@@ -261,6 +267,11 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
             return new Quaternion(0, 0, 0, 0);
         }
         return new Quaternion(q.w() / norm, q.x() / norm, q.y() / norm, q.z() / norm);
+    }
+
+    public float quaternionDistance(Quaternion q1, Quaternion q2) {
+        float dotProduct = q1.w() * q2.w() + q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z();
+        return (float) Math.acos(2 * dotProduct * dotProduct - 1);
     }
 
 
