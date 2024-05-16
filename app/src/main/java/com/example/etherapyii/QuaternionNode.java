@@ -1,15 +1,17 @@
 package com.example.etherapyii;
 
+import com.mbientlab.metawear.data.Quaternion;
+
 class QuaternionNode {
     double q0, q1, q2, q3;
     QuaternionNode next;
     QuaternionNode prev;
 
-    public QuaternionNode(double q0, double q1, double q2, double q3) {
-        this.q0 = q0;
-        this.q1 = q1;
-        this.q2 = q2;
-        this.q3 = q3;
+    public QuaternionNode(Quaternion q) {
+        this.q0 = q.w();
+        this.q1 = q.x();
+        this.q2 = q.y();
+        this.q3 = q.z();
         this.next = null;
         this.prev = null;
     }

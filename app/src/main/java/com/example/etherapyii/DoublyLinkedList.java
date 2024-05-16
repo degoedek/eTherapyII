@@ -9,8 +9,8 @@ public class DoublyLinkedList {
     }
 
     // Method to insert a quaternion at the beginning of the list
-    public void insert(float q0, float q1, float q2, float q3) {
-        QuaternionNode newNode = new QuaternionNode(q0, q1, q2, q3);
+    public void insert(Quaternion q) {
+        QuaternionNode newNode = new QuaternionNode(q);
         if (head == null) {
             head = newNode;
             head.next = head;
@@ -39,7 +39,7 @@ public class DoublyLinkedList {
         float sumQ2 = 0.0F;
         float sumQ3 = 0.0F;
 
-        QuaternionNode temp = head;
+        QuaternionNode temp = head.next;
         do {
             sumQ0 += (float) temp.q0;
             sumQ1 += (float) temp.q1;

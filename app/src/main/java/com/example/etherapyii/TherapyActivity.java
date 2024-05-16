@@ -36,6 +36,8 @@ import com.mbientlab.metawear.data.Quaternion;
 import com.mbientlab.metawear.module.SensorFusionBosch;
 import com.mbientlab.metawear.module.SensorFusionBosch.*;
 
+import java.util.LinkedList;
+
 import bolts.Continuation;
 import bolts.Task;
 
@@ -49,6 +51,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
     Boolean s1QuatSet = false, s2QuatSet = false;
     int timeLeft;
+    DoublyLinkedList s1PoseList = new DoublyLinkedList();
+    DoublyLinkedList s2PoseList = new DoublyLinkedList();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,14 +129,13 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 timeLeft = ((int) countdownDuration[0] + 100) / 1000;
 
 
-
                 String timeRemaining = "Pose\n" + timeLeft;
                 poseButton.setText(timeRemaining);
 
                 if (timeLeft == 5) {
                     String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
                     Log.i("TherapyActivity", tlString);
-//                    getPose();
+                    getPose();
                 }
             }
 
@@ -143,6 +146,10 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 Button stopButton = findViewById(R.id.btn_stop);
                 Log.i("TherapyActivity", "Checkpoint 4");
 
+                // Calculate Pose Averages
+                s1Pose = s1PoseList.averageQuaternions();
+                s2Pose = s2PoseList.averageQuaternions();
+                RelativeRotationPose = findRelativeRotation(normalize(s1Pose), normalize(s2Pose));
 
                 // Start Clock
                 isClockRunning = true;
@@ -150,8 +157,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 startClock(timeTV);
 
                 // Sensor Fusion
-                sensorFusion(board, 1);
-                sensorFusion(board2, 2);
+                sensorFusion(board, "therapy", 1);
+                sensorFusion(board2, "therapy", 2);
 
                 // Adjusting Button Visibility
                 beginButton.setVisibility(View.GONE);
@@ -178,7 +185,25 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         });
     }
 
-    private void sensorFusion(MetaWearBoard board, int sensorNum) {
+    /**
+     * Determines the initial position of a sensor
+     */
+    public void getPose() {
+        if (board != null && board2 != null) {
+            Thread s1Thread = new Thread(() -> sensorFusion(board, "pose", 1));
+            s1Thread.start();
+
+
+            Thread s2Thread = new Thread(() -> sensorFusion(board2, "pose", 2));
+            s2Thread.start();
+
+
+        } else {
+            Log.wtf("Error", "Boards Not Connected - Sensor Fusion not executed - will crash at the end of the countdown");
+        }
+    }
+
+    private void sensorFusion(MetaWearBoard board, String intent, int sensorNum) {
         SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
 
 
@@ -193,35 +218,27 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         sf.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
 //            Log.i("MainActivity", "Board: " + sensorNum + " - Quaternion = " + data.value(Quaternion.class));
                     // Assigning quaternion values to respective variables based on sensor
-                    switch (sensorNum) {
-                        case 1:
-                            s1CurrentQuat = data.value(Quaternion.class);
-                            if (!s1QuatSet) {
-                                s1Pose = s1CurrentQuat;
-                                Log.i("MainActivity", "S1 Pose - " + s1Pose);
-
+                    switch (intent) {
+                        case "pose":
+                            if (sensorNum == 1) {
+                                s1CurrentQuat = data.value(Quaternion.class);
+                                s1PoseList.insert(s1CurrentQuat);
+                            } else {
+                                s2CurrentQuat = data.value(Quaternion.class);
+                                s2PoseList.insert(s2CurrentQuat);
                             }
-                            s1QuatSet = true;
                             break;
-                        case 2:
-                            s2CurrentQuat = data.value(Quaternion.class);
-                            if (!s2QuatSet) {
-                                s2Pose = s2CurrentQuat;
-                                Log.i("MainActivity", "S2 Pose - " + s2Pose);
+                        case "therapy":
+                            if (sensorNum == 1) {
+                                s1CurrentQuat = data.value(Quaternion.class);
+                            } else {
+                                s2CurrentQuat = data.value(Quaternion.class);
                             }
-                            s2QuatSet = true;
+
+                            RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
+                            Log.i("TherapyActivity", "Distance - " + quaternionDistance(RelativeRotationPose, RelativeRotationCurrent));
                             break;
                     }
-
-                    if (s1QuatSet && s2QuatSet) {
-                        RelativeRotationPose = findRelativeRotation(normalize(s1Pose), normalize(s2Pose));
-//                Log.i("TherapyActivity", "Relative Rotation - " + RelativeRotationPose);
-                        RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
-//                Log.i("TherapyActivity", "Relative Rotation Current - " + RelativeRotationCurrent);
-                        Log.i("TherapyActivity", "Distance - " + quaternionDistance(RelativeRotationPose, RelativeRotationCurrent));
-
-                    }
-
 
                 }))
                 .continueWith((Continuation<Route, Void>) task -> {
@@ -235,7 +252,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder service) {
-        Log.d("TAMeasurement", "Service Connected");
+        Log.d("TherapyActivity", "Service Connected");
         //Typecast the binder to the service's LocalBinder class
         serviceBinder = (BtleService.LocalBinder) service;
         retrieveBoard();
@@ -262,9 +279,6 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         board = serviceBinder.getMetaWearBoard(sensor);
         board2 = serviceBinder.getMetaWearBoard(sensor2);
     }
-
-
-
 
     public Quaternion multiplyQuat(Quaternion q1, Quaternion q2) {
         float w3, w2, w1, x3, x2, x1, y3, y2, y1, z3, z2, z1;
