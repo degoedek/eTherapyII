@@ -45,7 +45,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     private Handler handler;
     private long startTime;
     private MetaWearBoard board, board2;
-    Quaternion s1CurrentQuat, s2CurrentQuat;
+    Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
     Boolean s1QuatSet = false, s2QuatSet = false;
 
     @Override
@@ -153,10 +153,18 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
             switch (sensorNum) {
                 case 1:
                     s1CurrentQuat = data.value(Quaternion.class);
+                    if (!s1QuatSet) {
+                        s1Pose = s1CurrentQuat;
+                        Log.i("MainActivity", "S1 Pose - " + s1Pose);
+                    }
                     s1QuatSet = true;
                     break;
                 case 2:
                     s2CurrentQuat = data.value(Quaternion.class);
+                    if (!s2QuatSet) {
+                        s2Pose = s2CurrentQuat;
+                        Log.i("MainActivity", "S2 Pose - " + s2Pose);
+                    }
                     s2QuatSet = true;
                     break;
             }
@@ -218,10 +226,22 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         y2 = q2.y();
         z2 = q2.z();
 
+        // TODO: Check this
         w3 = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;
         x3 = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;
         y3 = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
         z3 = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
+
+        /* From ChatGPT
+        public Quaternion multiply(Quaternion q) {
+            return new Quaternion(
+                w * q.w - x * q.x - y * q.y - z * q.z,
+                w * q.x + x * q.w + y * q.z - z * q.y,
+                w * q.y - x * q.z + y * q.w + z * q.x,
+                w * q.z + x * q.y - y * q.x + z * q.w
+            );
+        }
+         */
 
         return new Quaternion(w3, x3, y3, z3);
     }
@@ -234,4 +254,14 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         Quaternion q1Conjugate = conjugateQuat(q1);
         return multiplyQuat(q1Conjugate, q2);
     }
+
+    public Quaternion normalize(Quaternion q) {
+        float norm = (float) Math.sqrt(q.w() * q.w() + q.x() * q.x() + q.y() * q.y() + q.z() * q.z());
+        if (norm == 0) {
+            return new Quaternion(0, 0, 0, 0);
+        }
+        return new Quaternion(q.w() / norm, q.x() / norm, q.y() / norm, q.z() / norm);
+    }
+
+
 }
