@@ -56,6 +56,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
 
         //Buttons
+        Button reset = findViewById(R.id.resetButton);
         Button connect = findViewById(R.id.connect);
         next = findViewById(R.id.next_btn);
 
@@ -64,7 +65,9 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
         //onClickListeners
         connect.setOnClickListener(view -> {
-            Log.i("ConnectionPage", "Connect button executed");
+            // Make Reset Button Visible
+            reset.setVisibility(View.VISIBLE);
+
             //Bind the service when the activity is created
             getApplicationContext().bindService(new Intent(this, BtleService.class), this, Context.BIND_AUTO_CREATE);
 
@@ -84,11 +87,23 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         });
 
         next.setOnClickListener(view -> {
-            // TODO: Make navigation to next page
             Intent intent = new Intent(ConnectionActivity.this, TherapySelection.class);
             startActivity(intent);
         });
 
+        reset.setOnClickListener(view -> {
+            //Reset Button Invisible
+            reset.setVisibility(View.GONE);
+            connect.setVisibility(View.VISIBLE);
+
+            board.disconnectAsync();
+            board2.disconnectAsync();
+
+            s1Connected = false;
+            s2Connected = false;
+            s1Calibrated = false;
+            s2Calibrated = false;
+        });
         //Calibration Listeners:
         s1CalibrationInflater();
         s2CalibrationInflater();
@@ -121,6 +136,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     }
 
     public void connectBoard() {
+
         board.connectAsync().continueWith(new Continuation<Void, Void>() {
             final TextView sensorConnection1 = findViewById(R.id.SensorConnection1);
             final Button connect = findViewById(R.id.connect);
@@ -619,5 +635,14 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         });
     }
 
+    public void resetSensorUI() {
+        ImageView s1BatteryDisplay = findViewById(R.id.s1battery);
+        ImageView s2BatteryDisplay = findViewById(R.id.s2battery);
+        TextView s1BatteryPercent = findViewById(R.id.s1batteryPercent);
+        TextView s2BatteryPercent = findViewById(R.id.s2batteryPercent);
+        TextView s1ConnectedTV = findViewById(R.id.SensorConnection1);
+        TextView s2ConnectedTV = findViewById(R.id.SensorConnection2);
+
+    }
 
 }
