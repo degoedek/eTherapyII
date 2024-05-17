@@ -174,7 +174,8 @@
         android:text="Close"
         android:textSize="30sp"
         android:layout_gravity="center"
-        android:visibility="invisible"/>
+        android:visibility="invisible"
+        android:backgroundTint="@color/orange"/>
     <TextView
         android:id="@+id/blankSpace3"
         android:layout_width="25dp"
