@@ -10,11 +10,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.media.Image;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,7 +46,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     boolean s1Calibrated = false;
     boolean s2Calibrated = false;
     int connectionColor = Color.parseColor("#FF26FF00");
-    Button metrics;
+    Button next;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,15 +58,15 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
 
         //Buttons
+        Button reset = findViewById(R.id.resetButton);
         Button connect = findViewById(R.id.connect);
-        metrics = findViewById(R.id.metrics);
+        next = findViewById(R.id.next_btn);
 
         //Bind the service when the activity is created
         getApplicationContext().bindService(new Intent(this, BtleService.class), this, Context.BIND_AUTO_CREATE);
 
         //onClickListeners
         connect.setOnClickListener(view -> {
-            Log.i("ConnectionPage", "Connect button executed");
             //Bind the service when the activity is created
             getApplicationContext().bindService(new Intent(this, BtleService.class), this, Context.BIND_AUTO_CREATE);
 
@@ -82,12 +84,31 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             });
             connectThread.start();
         });
-        metrics.setOnClickListener(view -> {
-            // TODO: Make navigation to next page
-//            Intent intent = new Intent(ConnectionActivity.this, MetricsPage.class);
-//            startActivity(intent);
+
+        next.setOnClickListener(view -> {
+            Intent intent = new Intent(ConnectionActivity.this, TherapySelection.class);
+            startActivity(intent);
         });
 
+        reset.setOnClickListener(view -> {
+            if (!s1Connected && !s2Connected) {
+                Toast.makeText(getApplicationContext(), "No Sensors Connected", Toast.LENGTH_SHORT).show();
+                return;
+            } else {
+                //Reset Button Invisible
+                connect.setVisibility(View.VISIBLE);
+
+                board.disconnectAsync();
+                board2.disconnectAsync();
+
+                s1Connected = false;
+                s2Connected = false;
+                s1Calibrated = false;
+                s2Calibrated = false;
+
+                resetSensorUI();
+            }
+        });
         //Calibration Listeners:
         s1CalibrationInflater();
         s2CalibrationInflater();
@@ -120,10 +141,11 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     }
 
     public void connectBoard() {
+
         board.connectAsync().continueWith(new Continuation<Void, Void>() {
-            TextView sensorConnection1 = findViewById(R.id.SensorConnection1);
-            Button connect = findViewById(R.id.connect);
-            Button s1Calibrate = findViewById(R.id.s1Calibrate);
+            final TextView sensorConnection1 = findViewById(R.id.SensorConnection1);
+            final Button connect = findViewById(R.id.connect);
+            final Button s1Calibrate = findViewById(R.id.s1Calibrate);
 
 
             @Override
@@ -233,39 +255,40 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         ImageView s2B = findViewById(R.id.s2battery);
 
         boardId.readBatteryLevelAsync().continueWith(task -> {
-            int bp = task.getResult();
+            int batteryPercentage = task.getResult();
 
-            Log.i("MainActivity", "Sensor " + sensorNum + " Battery Level: " + bp);
+            Log.i("MainActivity", "Sensor " + sensorNum + " Battery Level: " + batteryPercentage);
 
             //Updating UI
             runOnUiThread(() -> {
                 if (sensorNum == 1) {
-                    String stringS1BP = "      " + bp + "%";
+                    String stringS1BP = "      " + batteryPercentage + "%";
+                    Log.i("MainActivity", "Sensor 1 Case Entered");
                     s1BP.setText(stringS1BP);
 
                     //Updating Imaging
-                    if (75 < bp && bp <= 100) {
+                    if (75 < batteryPercentage && batteryPercentage <= 100) {
                         s1B.setImageResource(R.drawable.battery_full);
-                    } else if (50 < bp && bp <= 75) {
+                    } else if (50 < batteryPercentage && batteryPercentage <= 75) {
                         s1B.setImageResource(R.drawable.battery_medium);
-                    } else if (25 < bp && bp <= 50) {
+                    } else if (25 < batteryPercentage && batteryPercentage <= 50) {
                         s1B.setImageResource(R.drawable.battery_low);
-                    } else if (0 <= bp && bp <= 25) {
+                    } else if (0 <= batteryPercentage && batteryPercentage <= 25) {
                         s1B.setImageResource(R.drawable.battery_dead);
                     }
 
                 } else if (sensorNum == 2) {
-                    String stringS2BP = "      " + bp + "%";
+                    String stringS2BP = "      " + batteryPercentage + "%";
                     s2BP.setText(stringS2BP);
 
                     //Updating Imaging
-                    if (75 < bp && bp <= 100) {
+                    if (75 < batteryPercentage && batteryPercentage <= 100) {
                         s2B.setImageResource(R.drawable.battery_full);
-                    } else if (50 < bp && bp <= 75) {
+                    } else if (50 < batteryPercentage && batteryPercentage <= 75) {
                         s2B.setImageResource(R.drawable.battery_medium);
-                    } else if (25 < bp && bp <= 50) {
+                    } else if (25 < batteryPercentage && batteryPercentage <= 50) {
                         s2B.setImageResource(R.drawable.battery_low);
-                    } else if (0 <= bp && bp <= 25) {
+                    } else if (0 <= batteryPercentage && batteryPercentage <= 25) {
                         s2B.setImageResource(R.drawable.battery_dead);
                     }
                 } else Log.wtf("MainActivity", "Wrong sensor number!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -293,6 +316,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         ImageView s1GyroImage = view2.findViewById(R.id.s1GyroImage);
         ImageView s1MagnetImage = view2.findViewById(R.id.s1MagnetImage);
 
+        ImageButton escape = view2.findViewById(R.id.emergencyExit);
         Button close = view2.findViewById(R.id.close);
 
         builder.setView(view2);
@@ -415,7 +439,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                         sensorConnection1.setText("Connected Calibrated");
                         close.setVisibility(View.VISIBLE);
 
-                        if (s1Calibrated && s2Calibrated) metrics.setVisibility(View.VISIBLE);
+                        if (s1Calibrated && s2Calibrated) next.setVisibility(View.VISIBLE);
                     }
 
                 });
@@ -435,7 +459,15 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                         sensorFusion.start();
                         return null;
                     });
-            Log.i("ConnectionPage", "s1Calibrate Thread Started!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            Log.i("ConnectionPage", "s1Calibrate Thread Started");
+        });
+
+        escape.setOnClickListener(view -> {
+            s1CalibrationScreen.dismiss();
+            Led led;
+            if ((led = board.getModule(Led.class)) != null) {
+                led.stop(true);
+            }
         });
 
         close.setOnClickListener(view -> {
@@ -467,6 +499,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         ImageView s2MagnetImage = view3.findViewById(R.id.s2MagnetImage);
 
         Button close = view3.findViewById(R.id.close);
+        ImageButton escape = view3.findViewById(R.id.emergencyExit);
 
 
         builder1.setView(view3);
@@ -589,7 +622,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                         sensorConnection2.setText("Connected Calibrated");
                         close.setVisibility(View.VISIBLE);
 
-                        if (s1Calibrated && s2Calibrated) metrics.setVisibility(View.VISIBLE);
+                        if (s1Calibrated && s2Calibrated) next.setVisibility(View.VISIBLE);
                     }
                 });
 
@@ -609,6 +642,15 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                         return null;
                     });
         });
+
+        escape.setOnClickListener(view -> {
+            s2CalibrationScreen.dismiss();
+            Led led2;
+            if ((led2 = board2.getModule(Led.class)) != null) {
+                led2.stop(true);
+            }
+        });
+
         close.setOnClickListener(view -> {
             s2CalibrationScreen.dismiss();
             Led led2;
@@ -618,5 +660,73 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         });
     }
 
+    public void resetSensorUI() {
+        ImageView s1BatteryDisplay = findViewById(R.id.s1battery);
+        ImageView s2BatteryDisplay = findViewById(R.id.s2battery);
+        TextView s1BatteryPercent = findViewById(R.id.s1batteryPercent);
+        TextView s2BatteryPercent = findViewById(R.id.s2batteryPercent);
+        TextView s1ConnectedTV = findViewById(R.id.SensorConnection1);
+        TextView s2ConnectedTV = findViewById(R.id.SensorConnection2);
+        Button s1Calibrate = findViewById(R.id.s1Calibrate);
+        Button s2Calibrate = findViewById(R.id.s2Calibrate);
+
+        // Sensor 1 Calibration Variables
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false);
+        View view2 = getLayoutInflater().inflate(R.layout.popup_s1_calibration_screen, null);
+        TextView s1AccelStatus = view2.findViewById(R.id.s1AccelStatus);
+        TextView s1GyroStatus = view2.findViewById(R.id.s1GyroStatus);
+        TextView s1MagnetStatus = view2.findViewById(R.id.s1MagnetStatus);
+        ImageView s1AccelImage = view2.findViewById(R.id.s1AccelImage);
+        ImageView s1GyroImage = view2.findViewById(R.id.s1GyroImage);
+        ImageView s1MagnetImage = view2.findViewById(R.id.s1MagnetImage);
+        Button s1close = view2.findViewById(R.id.close);
+
+        // Sensor 2 Calibration Variables
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+        builder1.setCancelable(false);
+        View view3 = getLayoutInflater().inflate(R.layout.popup_s2_calibration_screen, null);
+        TextView s2AccelStatus = view3.findViewById(R.id.s2AccelStatus);
+        TextView s2GyroStatus = view3.findViewById(R.id.s2GyroStatus);
+        TextView s2MagnetStatus = view3.findViewById(R.id.s2MagnetStatus);
+        ImageView s2AccelImage = view3.findViewById(R.id.s2AccelImage);
+        ImageView s2GyroImage = view3.findViewById(R.id.s2GyroImage);
+        ImageView s2MagnetImage = view3.findViewById(R.id.s2MagnetImage);
+        Button s2close = view3.findViewById(R.id.close);
+
+        // Resetting Base UI
+        s1BatteryDisplay.setImageResource(R.drawable.battery_unknown);
+        s2BatteryDisplay.setImageResource(R.drawable.battery_unknown);
+
+        s1BatteryPercent.setText("      %");
+        s2BatteryPercent.setText("      %");
+
+        s1ConnectedTV.setText("Disconnected");
+        s1ConnectedTV.setBackgroundColor(Color.parseColor("#FF0000"));
+        s2ConnectedTV.setText("Disconnected");
+        s2ConnectedTV.setBackgroundColor(Color.parseColor("#FF0000"));
+
+        s1Calibrate.setVisibility(View.INVISIBLE);
+        s2Calibrate.setVisibility(View.INVISIBLE);
+
+        // Resetting Sensor 1 Calibration UI
+        s1AccelImage.setImageResource(R.drawable.connection_status_unreliable);
+        s1AccelStatus.setText("Accelerometer: Unreliable");
+        s1GyroImage.setImageResource(R.drawable.connection_status_unreliable);
+        s1GyroStatus.setText("Gyroscope: Unreliable");
+        s1MagnetImage.setImageResource(R.drawable.connection_status_unreliable);
+        s1MagnetStatus.setText("Magnetometer: Unreliable");
+        s1close.setVisibility(View.INVISIBLE);
+
+        // Resetting Sensor 2 Calibration UI
+        s2AccelImage.setImageResource(R.drawable.connection_status_unreliable);
+        s2AccelStatus.setText("Accelerometer: Unreliable");
+        s2GyroImage.setImageResource(R.drawable.connection_status_unreliable);
+        s2GyroStatus.setText("Gyroscope: Unreliable");
+        s2MagnetImage.setImageResource(R.drawable.connection_status_unreliable);
+        s2MagnetStatus.setText("Magnetometer: Unreliable");
+
+
+    }
 
 }
