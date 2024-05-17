@@ -10,11 +10,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.media.Image;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -314,6 +316,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         ImageView s1GyroImage = view2.findViewById(R.id.s1GyroImage);
         ImageView s1MagnetImage = view2.findViewById(R.id.s1MagnetImage);
 
+        ImageButton escape = view2.findViewById(R.id.emergencyExit);
         Button close = view2.findViewById(R.id.close);
 
         builder.setView(view2);
@@ -456,7 +459,15 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                         sensorFusion.start();
                         return null;
                     });
-            Log.i("ConnectionPage", "s1Calibrate Thread Started!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            Log.i("ConnectionPage", "s1Calibrate Thread Started");
+        });
+
+        escape.setOnClickListener(view -> {
+            s1CalibrationScreen.dismiss();
+            Led led;
+            if ((led = board.getModule(Led.class)) != null) {
+                led.stop(true);
+            }
         });
 
         close.setOnClickListener(view -> {
@@ -488,6 +499,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         ImageView s2MagnetImage = view3.findViewById(R.id.s2MagnetImage);
 
         Button close = view3.findViewById(R.id.close);
+        ImageButton escape = view3.findViewById(R.id.emergencyExit);
 
 
         builder1.setView(view3);
@@ -630,6 +642,15 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                         return null;
                     });
         });
+
+        escape.setOnClickListener(view -> {
+            s2CalibrationScreen.dismiss();
+            Led led2;
+            if ((led2 = board2.getModule(Led.class)) != null) {
+                led2.stop(true);
+            }
+        });
+
         close.setOnClickListener(view -> {
             s2CalibrationScreen.dismiss();
             Led led2;
