@@ -53,6 +53,12 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     int timeLeft;
     DoublyLinkedList s1PoseList = new DoublyLinkedList();
     DoublyLinkedList s2PoseList = new DoublyLinkedList();
+    final int RUNNING_AVG_SIZE = 5;
+    Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
+    Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
+    int s1Index = 0, s2Index = 0;
+    Thread S1PoseThread = new Thread(() -> sensorFusion(board, "pose", 1));
+    Thread S2PoseThread = new Thread(() -> sensorFusion(board2, "pose", 2));
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +122,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     }
 
     public void startCountdown() {
-        final long[] countdownDuration = {3000};
+        long countdownTime = 3000;
+        final long[] countdownDuration = {countdownTime};
         Button poseButton = findViewById(R.id.beginButton);
 
         CountDownTimer mCountDownTimer = new CountDownTimer(countdownDuration[0], 1000) {
@@ -129,7 +136,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 String timeRemaining = "Pose\n" + timeLeft;
                 poseButton.setText(timeRemaining);
 
-                if (timeLeft == 5) {
+
+                if (timeLeft == countdownTime / 1000) {
                     String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
                     Log.i("TherapyActivity", tlString);
                     getPose();
@@ -142,10 +150,16 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 Button beginButton = findViewById(R.id.beginButton);
                 Button stopButton = findViewById(R.id.btn_stop);
 
+                // Stop Sensor Fusion
+                stopSensorFusion("all");
+
                 // Calculate Pose Averages
                 s1Pose = s1PoseList.averageQuaternions();
+                s1Pose = normalize(s1Pose);
                 s2Pose = s2PoseList.averageQuaternions();
-                RelativeRotationPose = findRelativeRotation(normalize(s1Pose), normalize(s2Pose));
+                s2Pose = normalize(s2Pose);
+                RelativeRotationPose = findRelativeRotation(s1Pose, s2Pose);
+
 
                 // Start Clock
                 isClockRunning = true;
@@ -153,8 +167,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 startClock(timeTV);
 
                 // Sensor Fusion
-                sensorFusion(board, "therapy", 1);
-                sensorFusion(board2, "therapy", 2);
+//                sensorFusion(board, "therapy", 1);
+//                sensorFusion(board2, "therapy", 2);
 
                 // Adjusting Button Visibility
                 beginButton.setVisibility(View.GONE);
@@ -186,14 +200,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
      */
     public void getPose() {
         if (board != null && board2 != null) {
-            Thread s1Thread = new Thread(() -> sensorFusion(board, "pose", 1));
-            s1Thread.start();
-
-
-            Thread s2Thread = new Thread(() -> sensorFusion(board2, "pose", 2));
-            s2Thread.start();
-
-
+            S1PoseThread.start();
+            S2PoseThread.start();
         } else {
             Log.wtf("Error", "Boards Not Connected - Sensor Fusion not executed - will crash at the end of the countdown");
         }
@@ -216,6 +224,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                     // Assigning quaternion values to respective variables based on sensor
                     switch (intent) {
                         case "pose":
+                            Log.i("TherapyActivity", "Pose Route Executing");
                             if (sensorNum == 1) {
                                 s1CurrentQuat = data.value(Quaternion.class);
                                 s1PoseList.insert(s1CurrentQuat);
@@ -225,10 +234,13 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                             }
                             break;
                         case "therapy":
+                            Log.i("TherapyActivity", "Therapy Route Executing");
                             if (sensorNum == 1) {
-                                s1CurrentQuat = data.value(Quaternion.class);
+                                s1RunningAverage[s1Index] = data.value(Quaternion.class);
+                                s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
                             } else {
-                                s2CurrentQuat = data.value(Quaternion.class);
+                                s2RunningAverage[s2Index] = data.value(Quaternion.class);
+                                s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
                             }
 
                             RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
@@ -330,5 +342,50 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         return (float) Math.acos(2 * dotProduct * dotProduct - 1);
     }
 
+    public Quaternion avgQuaternionArray(Quaternion[] array) {
+        float wSum = 0, xSum = 0, ySum = 0, zSum = 0;
+        int valueCounter = 0;
 
+        for (Quaternion quaternion : array) {
+            if (quaternion != null) {
+                wSum += quaternion.w();
+                xSum += quaternion.x();
+                ySum += quaternion.y();
+                zSum += quaternion.z();
+                valueCounter++;
+            }
+        }
+
+        return new Quaternion(wSum / valueCounter, xSum / valueCounter, ySum / valueCounter, zSum / valueCounter);
+    }
+
+    public void stopSensorFusion(String intent) {
+        switch (intent) {
+            case "pose":
+                S1PoseThread.interrupt();
+                S2PoseThread.interrupt();
+                break;
+            default:
+                if (board != null) {
+                    Thread stopThread = new Thread(() -> {
+                        final SensorFusionBosch sensorFusion = board.getModule(SensorFusionBosch.class);
+
+                        Log.i("stopSensorFusion", "Sensor 1 should stop sensor fusion");
+                        sensorFusion.stop();
+                        sensorFusion.quaternion().stop();
+                    });
+                    stopThread.start();
+                }
+                if (board2 != null) {
+                    Thread stopThread = new Thread(() -> {
+                        final SensorFusionBosch sensorFusion2 = board2.getModule(SensorFusionBosch.class);
+
+                        Log.i("stopSensorFusion", "Sensor 2 should stop sensor fusion");
+                        sensorFusion2.quaternion().stop();
+                        sensorFusion2.stop();
+                    });
+                    stopThread.start();
+                }
+        }
+    }
 }
