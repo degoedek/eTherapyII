@@ -1,33 +1,27 @@
 package com.example.etherapyii;
 
 import com.mbientlab.metawear.data.Quaternion;
+
 public class DoublyLinkedList {
     private QuaternionNode head;
 
     public DoublyLinkedList() {
-        this.head = null;
+        head = new QuaternionNode(new Quaternion(0,0,0,0));
+        head.next = head;
+        head.prev = head;
     }
 
-    // Method to insert a quaternion at the beginning of the list
-    public void insert(Quaternion q) {
-        QuaternionNode newNode = new QuaternionNode(q);
-        if (head == null) {
-            head = newNode;
-            head.next = head;
-            head.prev = head;
-        } else {
-            QuaternionNode last = head.prev;
-            last.next = newNode;
-            newNode.prev = last;
-            newNode.next = head;
-            head.prev = newNode;
-            head = newNode;
-        }
+    public void insert(Quaternion t) {
+        QuaternionNode newNode = new QuaternionNode(t);
+        newNode.prev = head;
+        newNode.next = head.next;
+        head.next.prev = newNode;
+        head.next = newNode;
     }
 
     // Method to average the quaternions in the list
     public Quaternion averageQuaternions() {
-        if (head == null) {
+        if (head.next == head) {
             //list is empty
 
 
@@ -65,4 +59,13 @@ public class DoublyLinkedList {
         return new Quaternion(avgQ0, avgQ1, avgQ2, avgQ3);
     }
 
+
 }
+
+
+
+
+
+
+
+
