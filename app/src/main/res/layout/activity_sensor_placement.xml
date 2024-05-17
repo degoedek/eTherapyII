@@ -72,17 +72,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
 
-        app:layout_constraintVertical_bias="0.43" />
+        />
 
     <ImageView
         android:id="@+id/hott_human"
-        android:layout_width="178dp"
-        android:layout_height="362dp"
+        android:layout_width="177dp"
+        android:layout_height="244dp"
         android:src="@drawable/hott_human"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.433" />
+        app:layout_constraintVertical_bias="0.494" />
 
     <Button
         android:id="@+id/start_activity"

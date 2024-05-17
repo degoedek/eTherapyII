@@ -60,6 +60,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
     Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
     String intent = "pose";
+    TextView distanceTV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -191,8 +192,12 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
                     time = String.format("%d:%02d", minutes, seconds);
                     timeTV.setText(time);
+                    distanceTV = findViewById(R.id.distanceTV);
+                    if (RelativeRotationCurrent != null && RelativeRotationPose != null) {
+                        distanceTV.setText(String.format("Current Angle:\n%.3f", quaternionDistance(RelativeRotationPose, RelativeRotationCurrent)));
+                    }
 
-                    handler.postDelayed(this, 1000); // Update every second
+                    handler.postDelayed(this, 500); // Update every second
                 }
             }
         });
