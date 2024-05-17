@@ -49,7 +49,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     private long startTime;
     private MetaWearBoard board, board2;
     Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
-    Boolean s1QuatSet = false, s2QuatSet = false;
+    Boolean posing = false, therapyActive = false;
     int timeLeft;
     DoublyLinkedList s1PoseList = new DoublyLinkedList();
     DoublyLinkedList s2PoseList = new DoublyLinkedList();
@@ -57,8 +57,9 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     int s1Index = 0, s2Index = 0;
-    Thread S1PoseThread = new Thread(() -> sensorFusion(board, "pose", 1));
-    Thread S2PoseThread = new Thread(() -> sensorFusion(board2, "pose", 2));
+    Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
+    Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
+    String intent = "pose";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,6 +116,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
         stopButton.setOnClickListener(view -> {
             isClockRunning = false;
+            therapyActive = false;
 
             // Adjusting Button Visibility
             stopButton.setVisibility(View.GONE);
@@ -140,6 +142,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 if (timeLeft == countdownTime / 1000) {
                     String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
                     Log.i("TherapyActivity", tlString);
+                    posing = true;
                     getPose();
                 }
             }
@@ -151,7 +154,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 Button stopButton = findViewById(R.id.btn_stop);
 
                 // Stop Sensor Fusion
-                stopSensorFusion("all");
+                posing = false;
 
                 // Calculate Pose Averages
                 s1Pose = s1PoseList.averageQuaternions();
@@ -167,8 +170,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 startClock(timeTV);
 
                 // Sensor Fusion
-//                sensorFusion(board, "therapy", 1);
-//                sensorFusion(board2, "therapy", 2);
+                therapyActive = true;
+                intent = "therapy";
 
                 // Adjusting Button Visibility
                 beginButton.setVisibility(View.GONE);
@@ -207,7 +210,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         }
     }
 
-    private void sensorFusion(MetaWearBoard board, String intent, int sensorNum) {
+    private void sensorFusion(MetaWearBoard board, int sensorNum) {
         SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
 
 
@@ -224,27 +227,36 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                     // Assigning quaternion values to respective variables based on sensor
                     switch (intent) {
                         case "pose":
-                            Log.i("TherapyActivity", "Pose Route Executing");
-                            if (sensorNum == 1) {
-                                s1CurrentQuat = data.value(Quaternion.class);
-                                s1PoseList.insert(s1CurrentQuat);
-                            } else {
-                                s2CurrentQuat = data.value(Quaternion.class);
-                                s2PoseList.insert(s2CurrentQuat);
+                            if (posing) {
+                                Log.i("TherapyActivity", "Pose Route Executing");
+                                if (sensorNum == 1) {
+                                    s1CurrentQuat = data.value(Quaternion.class);
+                                    s1PoseList.insert(s1CurrentQuat);
+                                } else {
+                                    s2CurrentQuat = data.value(Quaternion.class);
+                                    s2PoseList.insert(s2CurrentQuat);
+                                }
                             }
                             break;
                         case "therapy":
-                            Log.i("TherapyActivity", "Therapy Route Executing");
-                            if (sensorNum == 1) {
-                                s1RunningAverage[s1Index] = data.value(Quaternion.class);
-                                s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
-                            } else {
-                                s2RunningAverage[s2Index] = data.value(Quaternion.class);
-                                s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
-                            }
+                            if (therapyActive) {
+//                                Log.i("TherapyActivity", "Therapy Route Executing");
+                                if (sensorNum == 1) {
+                                    Log.i("TherapyActivity", "Sensor 1: " + data.value(Quaternion.class));
+                                    s1RunningAverage[s1Index] = data.value(Quaternion.class);
+                                    s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+                                } else {
+                                    Log.i("TherapyActivity", "Sensor 2: " + data.value(Quaternion.class));
+                                    s2RunningAverage[s2Index] = data.value(Quaternion.class);
+                                    s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+                                }
 
-                            RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
-                            Log.i("TherapyActivity", "Distance - " + quaternionDistance(RelativeRotationPose, RelativeRotationCurrent));
+                                s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
+                                s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
+
+                                RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
+                                Log.i("TherapyActivity", "Distance - " + quaternionDistance(RelativeRotationPose, RelativeRotationCurrent));
+                            }
                             break;
                     }
 
