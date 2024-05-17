@@ -102,7 +102,6 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         // Button Listeners
         beginButton.setOnClickListener(view -> {
             if (!started) {
-                Log.i("TherapyActivity", "Checkpoint 1");
                 started = true;
                 startCountdown();
             }
@@ -117,14 +116,12 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     }
 
     public void startCountdown() {
-        Log.i("TherapyActivity", "Checkpoint 2");
         final long[] countdownDuration = {3000};
         Button poseButton = findViewById(R.id.beginButton);
 
         CountDownTimer mCountDownTimer = new CountDownTimer(countdownDuration[0], 1000) {
             @Override
             public void onTick(long l) {
-                Log.i("TherapyActivity", "Checkpoint 3");
                 countdownDuration[0] = l;
                 timeLeft = ((int) countdownDuration[0] + 100) / 1000;
 
@@ -144,7 +141,6 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 TextView timeTV = findViewById(R.id.timeTV);
                 Button beginButton = findViewById(R.id.beginButton);
                 Button stopButton = findViewById(R.id.btn_stop);
-                Log.i("TherapyActivity", "Checkpoint 4");
 
                 // Calculate Pose Averages
                 s1Pose = s1PoseList.averageQuaternions();
