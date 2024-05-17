@@ -76,10 +76,13 @@ public class SensorPlacement extends AppCompatActivity implements ServiceConnect
             // Getting Value from SeekBar
             SeekBar seekBar = findViewById(R.id.reps_input);
             int reps = seekBar.getProgress();
+            SeekBar seekBar2 = findViewById(R.id.hold_input);
+            int holdTime = seekBar2.getProgress();
 
             Intent intent2 = new Intent(SensorPlacement.this, TherapyActivity.class);
             intent2.putExtra("Therapy" , therapy);
             intent2.putExtra("Reps" , reps);
+            intent2.putExtra("HoldTime", holdTime);
             startActivity(intent2);
         });
 

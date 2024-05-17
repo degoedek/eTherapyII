@@ -39,7 +39,7 @@
         android:id="@+id/reps_input"
         android:layout_width="302dp"
         android:layout_height="26dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:max="30"
         android:min="1"
         android:progress="10"
@@ -71,7 +71,7 @@
         android:min="1"
         android:progress="3"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.394"
+        app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/set_hold_timer" />
 
