@@ -54,9 +54,11 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     DoublyLinkedList s1PoseList = new DoublyLinkedList();
     DoublyLinkedList s2PoseList = new DoublyLinkedList();
     final int RUNNING_AVG_SIZE = 5;
+    final float ACCURACY_THRESHOLD = 0.25F;
     Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     int s1Index = 0, s2Index = 0;
+    float currentDistance;
     Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
     Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
     String intent = "pose";
@@ -194,7 +196,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                     timeTV.setText(time);
                     distanceTV = findViewById(R.id.distanceTV);
                     if (RelativeRotationCurrent != null && RelativeRotationPose != null) {
-                        distanceTV.setText(String.format("Current Angle:\n%.3f", quaternionDistance(RelativeRotationPose, RelativeRotationCurrent)));
+                        distanceTV.setText(String.format("Current Angle:\n%.3f", currentDistance));
                     }
 
                     handler.postDelayed(this, 500); // Update every second
@@ -256,11 +258,19 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                                     s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
                                 }
 
+                                // Computing Running Averages
                                 s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
                                 s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
 
+                                // Computing Relative Rotation and Distance
                                 RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
-                                Log.i("TherapyActivity", "Distance - " + quaternionDistance(RelativeRotationPose, RelativeRotationCurrent));
+                                currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
+                                Log.i("TherapyActivity", "Distance - " + currentDistance);
+
+                                // Checking Rep Completion Status
+                                if (currentDistance < ACCURACY_THRESHOLD) {
+
+                                }
                             }
                             break;
                     }
