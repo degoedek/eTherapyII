@@ -43,11 +43,12 @@ import bolts.Task;
 
 public class TherapyActivity extends AppCompatActivity implements ServiceConnection {
     private BtleService.LocalBinder serviceBinder;
-    private boolean isClockRunning = false, started = false;
+    private boolean isClockRunning = false, started = false, repStarted = false;
     private String time;
     private Handler handler;
     private long startTime;
     private MetaWearBoard board, board2;
+    private CountDownTimer repCountdown;
     Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
     Boolean posing = false, therapyActive = false;
     int timeLeft;
@@ -62,7 +63,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
     Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
     String intent = "pose";
-    TextView distanceTV;
+    TextView distanceTV, HoldTV;
+    int HOLD_TIME;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +91,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         Intent intent = getIntent();
         therapyType = intent.getExtras().getString("Therapy");
         reps = intent.getExtras().getInt("Reps");
+        HOLD_TIME = intent.getExtras().getInt("HoldTime");
 
         // Set Title
         switch (therapyType) {
@@ -218,6 +221,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     }
 
     private void sensorFusion(MetaWearBoard board, int sensorNum) {
+        HoldTV = findViewById(R.id.HoldTV);
+
         SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
 
 
@@ -268,8 +273,36 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                                 Log.i("TherapyActivity", "Distance - " + currentDistance);
 
                                 // Checking Rep Completion Status
-                                if (currentDistance < ACCURACY_THRESHOLD) {
+                                // ChatGPT - this is where I want the timer implemented
+                                if (currentDistance <= ACCURACY_THRESHOLD) {
+                                    // TODO: Have a timer for this, add haptic feedback on completion, and update reps completed
+                                    if (!repStarted) {
+                                        repStarted = true;
 
+                                        repCountdown = new CountDownTimer(HOLD_TIME, 1000) {
+
+                                            @Override
+                                            public void onTick(long l) {
+                                                Log.i("TherapyActivity", "Hold time remaining: " + l / 1000 + " seconds");
+                                                // Update the UI to show the remaining hold time
+                                                runOnUiThread(() -> HoldTV.setText(String.format("Hold time remaining:\n%.1f", (float) l / 1000)));
+                                            }
+
+                                            @Override
+                                            public void onFinish() {
+                                                Log.i("TherapyActivity", "Hold time finished. Rep completed!");
+                                                repStarted = false;
+                                                // Add haptic feedback here if desired
+                                                // Update the reps completed here
+                                            }
+                                        }.start();
+                                    }
+                                } else {
+                                    if (repStarted) {
+                                        repStarted = false;
+                                        // TODO: Stop timer
+
+                                    }
                                 }
                             }
                             break;
