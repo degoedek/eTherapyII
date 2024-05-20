@@ -145,11 +145,12 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 poseButton.setText(timeRemaining);
 
 
-                if (timeLeft == (countdownTime / 1000) - 1) {
+                if (timeLeft == (countdownTime / 1000)) {
                     String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
                     Log.i("TherapyActivity", tlString);
-                    posing = true;
                     getPose();
+                } else if (timeLeft == (countdownTime / 1000) - 1) {
+                    posing = true;
                 }
             }
 
