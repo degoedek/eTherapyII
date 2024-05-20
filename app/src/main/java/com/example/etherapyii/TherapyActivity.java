@@ -399,7 +399,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
     public float quaternionDistance(Quaternion q1, Quaternion q2) {
         float dotProduct = q1.w() * q2.w() + q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z();
-        return (float) Math.acos(2 * dotProduct * dotProduct - 1);
+        return (float) (Math.acos(2 * dotProduct * dotProduct - 1) * (180/ 3.14159));
     }
 
     public Quaternion avgQuaternionArray(Quaternion[] array) {
