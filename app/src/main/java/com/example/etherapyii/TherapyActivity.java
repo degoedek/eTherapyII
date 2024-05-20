@@ -55,7 +55,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     DoublyLinkedList s1PoseList = new DoublyLinkedList();
     DoublyLinkedList s2PoseList = new DoublyLinkedList();
     final int RUNNING_AVG_SIZE = 5;
-    final float ACCURACY_THRESHOLD = 0.25F;
+    final float ACCURACY_THRESHOLD = 10F;
     Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     int s1Index = 0, s2Index = 0;
@@ -145,7 +145,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 poseButton.setText(timeRemaining);
 
 
-                if (timeLeft == countdownTime / 1000) {
+                if (timeLeft == (countdownTime / 1000) - 1) {
                     String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
                     Log.i("TherapyActivity", tlString);
                     posing = true;
@@ -168,6 +168,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 s2Pose = s2PoseList.averageQuaternions();
                 s2Pose = normalize(s2Pose);
                 RelativeRotationPose = findRelativeRotation(s1Pose, s2Pose);
+                Log.i("TherapyActivity", "Relative Rotation Pose: " + RelativeRotationPose);
 
 
                 // Start Clock
@@ -224,6 +225,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         HoldTV = findViewById(R.id.HoldTV);
 
         SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
+        sf.resetOrientation();
 
 
         // use ndof mode with +/-16g acc range and 2000dps gyro range
@@ -240,7 +242,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                     switch (intent) {
                         case "pose":
                             if (posing) {
-                                Log.i("TherapyActivity", "Pose Route Executing");
+                                Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + data.value(Quaternion.class));
                                 if (sensorNum == 1) {
                                     s1CurrentQuat = data.value(Quaternion.class);
                                     s1PoseList.insert(s1CurrentQuat);
