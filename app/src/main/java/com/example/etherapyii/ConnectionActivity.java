@@ -326,7 +326,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             Led led1;
             if ((led1 = board.getModule(Led.class)) != null) {
                 led1.stop(true);
-                led1.editPattern(Led.Color.BLUE, Led.PatternPreset.SOLID)
+                led1.editPattern(Led.Color.RED, Led.PatternPreset.SOLID)
                         .commit();
                 led1.play();
             }
@@ -509,7 +509,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             Led led2;
             if ((led2 = board2.getModule(Led.class)) != null) {
                 led2.stop(true);
-                led2.editPattern(Led.Color.RED, Led.PatternPreset.SOLID)
+                led2.editPattern(Led.Color.BLUE, Led.PatternPreset.SOLID)
                         .commit();
                 led2.play();
             }
