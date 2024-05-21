@@ -128,6 +128,14 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        ///< Unbind the service when the activity is destroyed
+        getApplicationContext().unbindService(this);
+    }
+
     public void retrieveBoard() {
         // TODO: Convert this to a bluetooth scan rather than hard-coding MAC Addresses
         final BluetoothManager btManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);

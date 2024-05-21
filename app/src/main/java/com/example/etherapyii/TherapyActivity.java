@@ -123,6 +123,14 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         });
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        ///< Unbind the service when the activity is destroyed
+        getApplicationContext().unbindService(this);
+    }
+
     public void startCountdown() {
         long countdownTime = 3000;
         final long[] countdownDuration = {countdownTime};

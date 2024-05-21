@@ -125,8 +125,6 @@ public class SensorPlacement extends AppCompatActivity implements ServiceConnect
             }
         });
 
-
-
     }
 
     @Override
@@ -139,7 +137,15 @@ public class SensorPlacement extends AppCompatActivity implements ServiceConnect
 
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
+        Log.i("SensorPlacement", "Service Disconnected");
+    }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        ///< Unbind the service when the activity is destroyed
+        getApplicationContext().unbindService(this);
     }
 
     /**
