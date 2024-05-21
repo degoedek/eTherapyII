@@ -77,7 +77,6 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         TextView timeTV = findViewById(R.id.timeTV);
         Button beginButton = findViewById(R.id.beginButton);
         Button stopButton = findViewById(R.id.btn_stop);
-        Button closeButton = findViewById(R.id.closeApp);
         String therapyType;
         int reps, repsCompleted = 0;
         String repsText;
@@ -121,10 +120,6 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
             // Adjusting Button Visibility
             stopButton.setVisibility(View.GONE);
-        });
-
-        closeButton.setOnClickListener(view -> {
-            finishAffinity();
         });
     }
 
