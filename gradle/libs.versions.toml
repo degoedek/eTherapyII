@@ -9,6 +9,7 @@ activity = "1.8.0"
 constraintlayout = "2.1.4"
 gifDrawable = "1.2.27"
 metawear = "3.8.1"
+annotationJvm = "1.8.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -20,6 +21,7 @@ activity = { group = "androidx.activity", name = "activity", version.ref = "acti
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 gifDrawable = { group = "pl.droidsonroids.gif", name = "android-gif-drawable", version.ref = "gifDrawable" }
 metawear = { group = "com.mbientlab", name = "metawear", version.ref = "metawear" }
+annotation-jvm = { group = "androidx.annotation", name = "annotation-jvm", version.ref = "annotationJvm" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

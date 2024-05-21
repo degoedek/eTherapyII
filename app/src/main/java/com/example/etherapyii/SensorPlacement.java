@@ -76,10 +76,13 @@ public class SensorPlacement extends AppCompatActivity implements ServiceConnect
             // Getting Value from SeekBar
             SeekBar seekBar = findViewById(R.id.reps_input);
             int reps = seekBar.getProgress();
+            SeekBar seekBar2 = findViewById(R.id.hold_input);
+            int holdTime = seekBar2.getProgress();
 
             Intent intent2 = new Intent(SensorPlacement.this, TherapyActivity.class);
             intent2.putExtra("Therapy" , therapy);
             intent2.putExtra("Reps" , reps);
+            intent2.putExtra("HoldTime", holdTime);
             startActivity(intent2);
         });
 
@@ -103,6 +106,24 @@ public class SensorPlacement extends AppCompatActivity implements ServiceConnect
             }
         });
 
+         SeekBar seekBar2 = findViewById(R.id.hold_input);
+         TextView valueLabel2 = findViewById(R.id.hold_value_label);
+        seekBar2.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar2, int progress, boolean fromUser) {
+                valueLabel2.setText(String.valueOf(progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar2) {
+                // Not needed for this example
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar2) {
+                // Not needed for this example
+            }
+        });
 
 
 

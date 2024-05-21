@@ -5,9 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SensorPlacement"
     android:background="@drawable/gradient_background"
-    >
+    tools:context=".SensorPlacement">
 
     <TextView
         android:id="@+id/sensor_placement"
@@ -38,12 +37,12 @@
 
     <SeekBar
         android:id="@+id/reps_input"
-        android:progress="10"
         android:layout_width="302dp"
         android:layout_height="26dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:max="30"
         android:min="1"
+        android:progress="10"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
@@ -63,6 +62,45 @@
         app:layout_constraintStart_toEndOf="@+id/set_num_reps"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <SeekBar
+        android:id="@+id/hold_input"
+        android:layout_width="302dp"
+        android:layout_height="26dp"
+        android:layout_marginTop="8dp"
+        android:max="10"
+        android:min="1"
+        android:progress="3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/set_hold_timer" />
+
+    <TextView
+        android:id="@+id/hold_value_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="152dp"
+        android:text="3"
+        android:textColor="@android:color/black"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.101"
+        app:layout_constraintStart_toEndOf="@+id/set_hold_timer"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/set_hold_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="152dp"
+        android:gravity="center"
+        android:text="@string/holding_time_on_target"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.365"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/hott_hand"
         android:layout_width="210dp"
@@ -72,25 +110,25 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
 
-        app:layout_constraintVertical_bias="0.43" />
+        />
 
     <ImageView
         android:id="@+id/hott_human"
-        android:layout_width="178dp"
-        android:layout_height="362dp"
+        android:layout_width="177dp"
+        android:layout_height="244dp"
         android:src="@drawable/hott_human"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.433" />
+        app:layout_constraintVertical_bias="0.494" />
 
     <Button
         android:id="@+id/start_activity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="84dp"
-        android:text="@string/start_activity"
         android:backgroundTint="@color/orange"
+        android:text="@string/start_activity"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"

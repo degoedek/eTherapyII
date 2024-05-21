@@ -25,41 +25,40 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.mbientlab.metawear.Data;
 import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.Route;
 import com.mbientlab.metawear.Subscriber;
 import com.mbientlab.metawear.android.BtleService;
-import com.mbientlab.metawear.builder.RouteBuilder;
-import com.mbientlab.metawear.builder.RouteComponent;
 import com.mbientlab.metawear.data.Quaternion;
 import com.mbientlab.metawear.module.SensorFusionBosch;
-import com.mbientlab.metawear.module.SensorFusionBosch.*;
-
-import java.util.LinkedList;
 
 import bolts.Continuation;
-import bolts.Task;
+
 
 public class TherapyActivity extends AppCompatActivity implements ServiceConnection {
     private BtleService.LocalBinder serviceBinder;
-    private boolean isClockRunning = false, started = false;
+    private boolean isClockRunning = false, started = false, repStarted = false;
     private String time;
     private Handler handler;
     private long startTime;
     private MetaWearBoard board, board2;
+    private CountDownTimer repCountdown;
     Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
     Boolean posing = false, therapyActive = false;
     int timeLeft;
     DoublyLinkedList s1PoseList = new DoublyLinkedList();
     DoublyLinkedList s2PoseList = new DoublyLinkedList();
     final int RUNNING_AVG_SIZE = 5;
+    final float ACCURACY_THRESHOLD = 10F;
     Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     int s1Index = 0, s2Index = 0;
+    float currentDistance;
     Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
     Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
     String intent = "pose";
+    TextView distanceTV, HoldTV;
+    int HOLD_TIME;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +85,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         Intent intent = getIntent();
         therapyType = intent.getExtras().getString("Therapy");
         reps = intent.getExtras().getInt("Reps");
+        HOLD_TIME = intent.getExtras().getInt("HoldTime");
 
         // Set Title
         switch (therapyType) {
@@ -139,11 +139,12 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 poseButton.setText(timeRemaining);
 
 
-                if (timeLeft == countdownTime / 1000) {
+                if (timeLeft == (countdownTime / 1000)) {
                     String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
                     Log.i("TherapyActivity", tlString);
-                    posing = true;
                     getPose();
+                } else if (timeLeft == (countdownTime / 1000) - 1) {
+                    posing = true;
                 }
             }
 
@@ -162,6 +163,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                 s2Pose = s2PoseList.averageQuaternions();
                 s2Pose = normalize(s2Pose);
                 RelativeRotationPose = findRelativeRotation(s1Pose, s2Pose);
+                Log.i("TherapyActivity", "Relative Rotation Pose: " + RelativeRotationPose);
 
 
                 // Start Clock
@@ -191,8 +193,12 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
                     time = String.format("%d:%02d", minutes, seconds);
                     timeTV.setText(time);
+                    distanceTV = findViewById(R.id.distanceTV);
+                    if (RelativeRotationCurrent != null && RelativeRotationPose != null) {
+                        distanceTV.setText(String.format("Current Angle:\n%.3f", currentDistance));
+                    }
 
-                    handler.postDelayed(this, 1000); // Update every second
+                    handler.postDelayed(this, 500); // Update every second
                 }
             }
         });
@@ -211,7 +217,10 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     }
 
     private void sensorFusion(MetaWearBoard board, int sensorNum) {
+        HoldTV = findViewById(R.id.HoldTV);
+
         SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
+        sf.resetOrientation();
 
 
         // use ndof mode with +/-16g acc range and 2000dps gyro range
@@ -228,7 +237,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                     switch (intent) {
                         case "pose":
                             if (posing) {
-                                Log.i("TherapyActivity", "Pose Route Executing");
+                                Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + data.value(Quaternion.class));
                                 if (sensorNum == 1) {
                                     s1CurrentQuat = data.value(Quaternion.class);
                                     s1PoseList.insert(s1CurrentQuat);
@@ -251,11 +260,47 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                                     s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
                                 }
 
+                                // Computing Running Averages
                                 s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
                                 s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
 
+                                // Computing Relative Rotation and Distance
                                 RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
-                                Log.i("TherapyActivity", "Distance - " + quaternionDistance(RelativeRotationPose, RelativeRotationCurrent));
+                                currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
+                                Log.i("TherapyActivity", "Distance - " + currentDistance);
+
+                                // Checking Rep Completion Status
+                                // ChatGPT - this is where I want the timer implemented
+                                if (currentDistance <= ACCURACY_THRESHOLD) {
+                                    // TODO: Have a timer for this, add haptic feedback on completion, and update reps completed
+                                    if (!repStarted) {
+                                        repStarted = true;
+
+                                        repCountdown = new CountDownTimer(HOLD_TIME, 1000) {
+
+                                            @Override
+                                            public void onTick(long l) {
+                                                Log.i("TherapyActivity", "Hold time remaining: " + l / 1000 + " seconds");
+                                                // Update the UI to show the remaining hold time
+                                                runOnUiThread(() -> HoldTV.setText(String.format("Hold time remaining:\n%.1f", (float) l / 1000)));
+                                            }
+
+                                            @Override
+                                            public void onFinish() {
+                                                Log.i("TherapyActivity", "Hold time finished. Rep completed!");
+                                                repStarted = false;
+                                                // Add haptic feedback here if desired
+                                                // Update the reps completed here
+                                            }
+                                        }.start();
+                                    }
+                                } else {
+                                    if (repStarted) {
+                                        repStarted = false;
+                                        // TODO: Stop timer
+
+                                    }
+                                }
                             }
                             break;
                     }
@@ -351,7 +396,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
     public float quaternionDistance(Quaternion q1, Quaternion q2) {
         float dotProduct = q1.w() * q2.w() + q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z();
-        return (float) Math.acos(2 * dotProduct * dotProduct - 1);
+        return (float) (Math.acos(2 * dotProduct * dotProduct - 1) * (180/ 3.14159));
     }
 
     public Quaternion avgQuaternionArray(Quaternion[] array) {
