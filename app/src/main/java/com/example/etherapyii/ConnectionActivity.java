@@ -88,6 +88,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         next.setOnClickListener(view -> {
             Intent intent = new Intent(ConnectionActivity.this, TherapySelection.class);
             startActivity(intent);
+            finish();
         });
 
         reset.setOnClickListener(view -> {

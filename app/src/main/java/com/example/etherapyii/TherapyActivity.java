@@ -25,21 +25,15 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.mbientlab.metawear.Data;
 import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.Route;
 import com.mbientlab.metawear.Subscriber;
 import com.mbientlab.metawear.android.BtleService;
-import com.mbientlab.metawear.builder.RouteBuilder;
-import com.mbientlab.metawear.builder.RouteComponent;
 import com.mbientlab.metawear.data.Quaternion;
 import com.mbientlab.metawear.module.SensorFusionBosch;
-import com.mbientlab.metawear.module.SensorFusionBosch.*;
-
-import java.util.LinkedList;
 
 import bolts.Continuation;
-import bolts.Task;
+
 
 public class TherapyActivity extends AppCompatActivity implements ServiceConnection {
     private BtleService.LocalBinder serviceBinder;
@@ -83,6 +77,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         TextView timeTV = findViewById(R.id.timeTV);
         Button beginButton = findViewById(R.id.beginButton);
         Button stopButton = findViewById(R.id.btn_stop);
+        Button closeButton = findViewById(R.id.closeApp);
         String therapyType;
         int reps, repsCompleted = 0;
         String repsText;
@@ -126,6 +121,10 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
             // Adjusting Button Visibility
             stopButton.setVisibility(View.GONE);
+        });
+
+        closeButton.setOnClickListener(view -> {
+            finishAffinity();
         });
     }
 
