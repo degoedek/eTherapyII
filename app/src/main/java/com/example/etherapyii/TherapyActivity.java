@@ -30,6 +30,7 @@ import com.mbientlab.metawear.Route;
 import com.mbientlab.metawear.Subscriber;
 import com.mbientlab.metawear.android.BtleService;
 import com.mbientlab.metawear.data.Quaternion;
+import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.SensorFusionBosch;
 
 import bolts.Continuation;
@@ -109,6 +110,18 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         // Button Listeners
         beginButton.setOnClickListener(view -> {
             if (!started) {
+                Led led;
+                if ((led = board.getModule(Led.class)) != null) {
+                    led.editPattern(Led.Color.RED, Led.PatternPreset.SOLID)
+                            .commit();
+                    led.play();
+                }
+
+                if ((led = board2.getModule(Led.class)) != null) {
+                    led.editPattern(Led.Color.BLUE, Led.PatternPreset.SOLID)
+                            .commit();
+                    led.play();
+                }
                 started = true;
                 startCountdown();
             }
@@ -118,8 +131,8 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
             isClockRunning = false;
             therapyActive = false;
 
-            // Adjusting Button Visibility
-            stopButton.setVisibility(View.GONE);
+            Intent navIntent = new Intent(TherapyActivity.this, SummaryPage.class);
+            startActivity(navIntent);
         });
     }
 
@@ -404,6 +417,10 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
     public float quaternionDistance(Quaternion q1, Quaternion q2) {
         float dotProduct = q1.w() * q2.w() + q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z();
+
+        // Preventing a divide by zero error
+        if (dotProduct > .999 && dotProduct < 1.001) return 0;
+
         return (float) (Math.acos(2 * dotProduct * dotProduct - 1) * (180/ 3.14159));
     }
 

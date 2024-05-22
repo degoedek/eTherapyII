@@ -140,13 +140,13 @@ public class SensorPlacement extends AppCompatActivity implements ServiceConnect
         Log.i("SensorPlacement", "Service Disconnected");
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        ///< Unbind the service when the activity is destroyed
-        getApplicationContext().unbindService(this);
-    }
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//
+//        ///< Unbind the service when the activity is destroyed
+//        getApplicationContext().unbindService(this);
+//    }
 
     /**
      * Uses the MAC addresses of the sensors to make sure that they are connected

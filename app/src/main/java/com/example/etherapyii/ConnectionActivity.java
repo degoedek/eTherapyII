@@ -96,9 +96,30 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                 Toast.makeText(getApplicationContext(), "No Sensors Connected", Toast.LENGTH_SHORT).show();
                 return;
             } else {
-                //Reset Button Invisible
+                // Reset Button Invisible
                 connect.setVisibility(View.VISIBLE);
 
+                // Stop sensor fusion on both boards
+                if (board != null) {
+                    SensorFusionBosch sensorFusion = board.getModule(SensorFusionBosch.class);
+                    if (sensorFusion != null) {
+                        sensorFusion.configure()
+                                .mode(SensorFusionBosch.Mode.SLEEP)
+                                .commit();
+                    }
+                }
+
+                if (board2 != null) {
+                    SensorFusionBosch sensorFusion2 = board2.getModule(SensorFusionBosch.class);
+                    if (sensorFusion2 != null) {
+                        sensorFusion2.configure()
+                                .mode(SensorFusionBosch.Mode.SLEEP)
+                                .commit();
+                    }
+                }
+
+                // Disconnect the boards
+                assert board != null;
                 board.disconnectAsync();
                 board2.disconnectAsync();
 
@@ -108,8 +129,14 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                 s2Calibrated = false;
 
                 resetSensorUI();
+
+                // Restart the activity
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
             }
         });
+
         //Calibration Listeners:
         s1CalibrationInflater();
         s2CalibrationInflater();
@@ -128,13 +155,13 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        ///< Unbind the service when the activity is destroyed
-        getApplicationContext().unbindService(this);
-    }
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//
+//        ///< Unbind the service when the activity is destroyed
+//        getApplicationContext().unbindService(this);
+//    }
 
     public void retrieveBoard() {
         // TODO: Convert this to a bluetooth scan rather than hard-coding MAC Addresses
