@@ -25,7 +25,17 @@
           <theme>@style/Theme.ETherapyII</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_summary_page.xml">
+        <config>
+          <theme>@style/Theme.ETherapyII</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_therapy.xml">
+        <config>
+          <theme>@style/Theme.ETherapyII</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_therapy_container.xml">
         <config>
           <theme>@style/Theme.ETherapyII</theme>
         </config>
@@ -51,6 +61,16 @@
         </config>
       </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml">
+        <config>
+          <theme>@style/Theme.ETherapyII</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/fragment_therapy_description.xml">
+        <config>
+          <theme>@style/Theme.ETherapyII</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/fragment_therapy_selection.xml">
         <config>
           <theme>@style/Theme.ETherapyII</theme>
         </config>
@@ -87,10 +107,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de878f84-49ff-46a3-a0a0-3d4ca6f2a0ad" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyContainer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyDescriptionFragment.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapySelectionFragment.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_therapy_container.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_therapy_description.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_therapy_selection.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/ActivitySelectionFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/ActivitySelectionFragment.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/ConnectionActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/ConnectionActivity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/SensorPlacement.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/SensorPlacement.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/HubActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/HubActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_welcome_screen.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_welcome_screen.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,6 +187,9 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 0
@@ -201,6 +232,9 @@
       <recent name="com.example.etherapyii" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.example.etherapyii" />
+    </key>
+    <key name="android.template.-1516486859">
       <recent name="com.example.etherapyii" />
     </key>
   </component>

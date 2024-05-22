@@ -278,11 +278,10 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         });
     }
 
+    /** board - the MetaWearBoard that will have it's battery percent checked
+     * sensorNum - *currently* either a 1 or a 2, helps clarify which sensor display to change
+     */
     public void checkBattery(@NonNull MetaWearBoard boardId, int sensorNum) {
-        /** board - the MetaWearBoard that will have it's battery percent checked
-         * sensorNum - *currently* either a 1 or a 2, helps clarify which sensor display to change
-         */
-
 //        Log.i("MainActivity", "checkBattery Method Called");
         TextView s1BP = findViewById(R.id.s1batteryPercent);        //Battery Percentages
         TextView s2BP = findViewById(R.id.s2batteryPercent);
