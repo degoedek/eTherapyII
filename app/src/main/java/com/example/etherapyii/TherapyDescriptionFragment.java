@@ -51,10 +51,19 @@ public class TherapyDescriptionFragment extends Fragment {
             transaction.addToBackStack(null);
             transaction.commit();
         });
+
         startActivity.setOnClickListener(view2 -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("therapy", "HOTT");
 
+            ConnectionFragment connectionFragment = new ConnectionFragment();
+            connectionFragment.setArguments(bundle);
+
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.therapyContainer, connectionFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         });
-
 
         // Inflate the layout for this fragment
         return view;
