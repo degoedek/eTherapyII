@@ -1,6 +1,5 @@
 package com.example.etherapyii;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -21,10 +20,16 @@ public class TherapySelectionFragment extends Fragment {
         Button Hott = view.findViewById(R.id.HOTT);
 
         Hott.setOnClickListener(v -> {
-//            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-//            transaction.replace(R.id.fragment_container, new FragmentTwo());
-//            transaction.addToBackStack(null);
-//            transaction.commit();
+            Bundle bundle = new Bundle();
+            bundle.putString("therapy", "HOTT");
+
+            TherapyDescriptionFragment therapyDescriptionFragment = new TherapyDescriptionFragment();
+            therapyDescriptionFragment.setArguments(bundle);
+
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.therapyContainer, therapyDescriptionFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         });
 
         return view;
