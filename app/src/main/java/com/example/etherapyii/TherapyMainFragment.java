@@ -12,6 +12,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -59,6 +60,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     String intent = "pose";
     TextView distanceTV, HoldTV;
     int HOLD_TIME;
+    View view;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -68,7 +70,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_therapy_main, container, false);
+        view = inflater.inflate(R.layout.fragment_therapy_main, container, false);
 
 
         // Variable Declaration
@@ -131,7 +133,18 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
             isClockRunning = false;
             therapyActive = false;
 
-            // TODO: Make navigate to next fragment
+            Bundle bundle = new Bundle();
+            // TODO: Add bundle extras here when needed
+
+            // Create the new fragment and set the bundle as its arguments
+            SummaryFragment summaryFragment = new SummaryFragment();
+            summaryFragment.setArguments(bundle);
+
+            // Replace the current fragment with the new one
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.therapyContainer, summaryFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         });
 
         // Inflate the layout for this fragment
@@ -152,9 +165,9 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     }
 
     public void startCountdown() {
-        long countdownTime = 3000;
+        long countdownTime = 3000; // This is the duration of pose
         final long[] countdownDuration = {countdownTime};
-        Button poseButton = findViewById(R.id.beginButton);
+        Button poseButton = view.findViewById(R.id.beginButton);
 
         CountDownTimer mCountDownTimer = new CountDownTimer(countdownDuration[0], 1000) {
             @Override
@@ -178,9 +191,9 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
 
             @Override
             public void onFinish() {
-                TextView timeTV = findViewById(R.id.timeTV);
-                Button beginButton = findViewById(R.id.beginButton);
-                Button stopButton = findViewById(R.id.btn_stop);
+                TextView timeTV = view.findViewById(R.id.timeTV);
+                Button beginButton = view.findViewById(R.id.beginButton);
+                Button stopButton = view.findViewById(R.id.btn_stop);
 
                 // Stop Sensor Fusion
                 posing = false;
@@ -221,7 +234,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
 
                     time = String.format("%d:%02d", minutes, seconds);
                     timeTV.setText(time);
-                    distanceTV = findViewById(R.id.distanceTV);
+                    distanceTV = view.findViewById(R.id.distanceTV);
                     if (RelativeRotationCurrent != null && RelativeRotationPose != null) {
                         distanceTV.setText(String.format("Current Angle:\n%.3f", currentDistance));
                     }
@@ -245,7 +258,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     }
 
     private void sensorFusion(MetaWearBoard board, int sensorNum) {
-        HoldTV = findViewById(R.id.HoldTV);
+        HoldTV = view.findViewById(R.id.HoldTV);
 
         SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
         sf.resetOrientation();
@@ -310,7 +323,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                                             public void onTick(long l) {
                                                 Log.i("TherapyActivity", "Hold time remaining: " + l / 1000 + " seconds");
                                                 // Update the UI to show the remaining hold time
-                                                runOnUiThread(() -> HoldTV.setText(String.format("Hold time remaining:\n%.1f", (float) l / 1000)));
+                                                getActivity().runOnUiThread(() -> HoldTV.setText(String.format("Hold time remaining:\n%.1f", (float) l / 1000)));
                                             }
 
                                             @Override
