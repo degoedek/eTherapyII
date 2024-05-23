@@ -23,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mbientlab.metawear.MetaWearBoard;
@@ -32,6 +33,9 @@ import com.mbientlab.metawear.android.BtleService;
 import com.mbientlab.metawear.data.Quaternion;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.SensorFusionBosch;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import bolts.Continuation;
 
@@ -44,23 +48,29 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     private long startTime;
     private MetaWearBoard board, board2;
     private CountDownTimer repCountdown;
-    Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
-    Boolean posing = false, therapyActive = false;
-    int timeLeft;
-    DoublyLinkedList s1PoseList = new DoublyLinkedList();
-    DoublyLinkedList s2PoseList = new DoublyLinkedList();
-    final int RUNNING_AVG_SIZE = 5;
-    final float ACCURACY_THRESHOLD = 10F;
-    Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
-    Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
-    int s1Index = 0, s2Index = 0;
-    float currentDistance;
-    Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
-    Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
-    String intent = "pose";
-    TextView distanceTV, HoldTV;
-    int HOLD_TIME;
-    View view;
+    private Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
+    private Boolean posing = false, therapyActive = false;
+    private int timeLeft;
+    private DoublyLinkedList s1PoseList = new DoublyLinkedList();
+    private DoublyLinkedList s2PoseList = new DoublyLinkedList();
+    private final int RUNNING_AVG_SIZE = 5;
+    private final float ACCURACY_THRESHOLD = 10F;
+    private Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
+    private Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
+    private int s1Index = 0, s2Index = 0;
+    private float currentDistance;
+    private Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
+    private Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
+    private String intent = "pose";
+    private TextView distanceTV, HoldTV;
+    private ImageView circleUserWithNotch;
+    private int HOLD_TIME;
+    private View view;
+    private Handler uiHandler = new Handler();
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private float[] s1Angles = new float[2];  // [yaw, pitch]
+    private float[] s2Angles = new float[2];
+    private float initialX, initialY;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -79,9 +89,15 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         TextView timeTV = view.findViewById(R.id.timeTV);
         Button beginButton = view.findViewById(R.id.beginButton);
         Button stopButton = view.findViewById(R.id.btn_stop);
+        circleUserWithNotch = view.findViewById(R.id.circle_user_with_notch);
         String therapyType;
         int reps, repsCompleted = 0;
         String repsText;
+
+        circleUserWithNotch.post(() -> {
+            initialX = circleUserWithNotch.getX() - (float) circleUserWithNotch.getWidth() / 2;
+            initialY = circleUserWithNotch.getY() - (float) circleUserWithNotch.getWidth() / 2;
+        });
 
         // Get Intent
         // Getting Metric From Connection Fragment
@@ -295,10 +311,18 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                                     Log.i("TherapyActivity", "Sensor 1: " + data.value(Quaternion.class));
                                     s1RunningAverage[s1Index] = data.value(Quaternion.class);
                                     s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+
+                                    // For UI Updating
+                                    s1Angles = quaternionToAngles(data.value(Quaternion.class), sensorNum);
                                 } else {
                                     Log.i("TherapyActivity", "Sensor 2: " + data.value(Quaternion.class));
                                     s2RunningAverage[s2Index] = data.value(Quaternion.class);
                                     s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+
+                                    // UI Updating
+                                    s2Angles = quaternionToAngles(data.value(Quaternion.class), sensorNum);
+                                    updateCirclePosition(s1Angles, s2Angles);
+
                                 }
 
                                 // Computing Running Averages
@@ -373,6 +397,54 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         board = serviceBinder.getMetaWearBoard(sensor);
         board2 = serviceBinder.getMetaWearBoard(sensor2);
     }
+
+    private float[] quaternionToAngles(Quaternion q, int sensorNum) {
+        float yaw, pitch;
+
+        // NOTE: This is probably wrong
+
+        if (sensorNum == 1) {
+            // Yaw (rotation around y-axis)
+            yaw = (float) Math.atan2(2.0 * (q.w() * q.y() + q.x() * q.z()), 1.0 - 2.0 * (q.y() * q.y() + q.x() * q.x()));
+            // Pitch (rotation around z-axis)
+            pitch = (float) Math.asin(2.0 * (q.w() * q.z() - q.y() * q.x()));
+        } else {
+            // Yaw (rotation around y-axis)
+            yaw = (float) Math.atan2(2.0 * (q.w() * q.y() + q.x() * q.z()), 1.0 - 2.0 * (q.y() * q.y() + q.x() * q.x()));
+            // Pitch (rotation around x-axis)
+            pitch = (float) Math.asin(2.0 * (q.w() * q.x() - q.z() * q.y()));
+        }
+
+        // New calculation
+//        // Yaw (rotation around y-axis)
+//        yaw = (float) Math.atan2(2.0 * (q.w() * q.y() + q.x() * q.z()), 1.0 - 2.0 * (q.y() * q.y() + q.x() * q.x()));
+//        // Pitch (rotation around x-axis)
+//        pitch = (float) Math.asin(2.0 * (q.w() * q.x() - q.z() * q.y()));
+
+        return new float[]{yaw, pitch};
+    }
+
+    private void updateCirclePosition(float[] s1Angles, float[] s2Angles) {
+        executorService.execute(() -> {
+            // Calculate the position difference based on angles
+            float dx = (s2Angles[1] - s1Angles[1]) * 100; // Pitch difference
+            float dy = (s2Angles[0] - s1Angles[0]) * 100; // Yaw difference
+
+            uiHandler.post(() -> {
+                // Update UI with new position
+                float newX = initialX + dx - (float) circleUserWithNotch.getWidth() / 2;
+                float newY = initialY + dy - (float) circleUserWithNotch.getHeight() / 2;
+
+                // Ensure the circles stay within the screen bounds
+                newX = Math.max(0, Math.min(newX, view.getWidth() - circleUserWithNotch.getWidth()));
+                newY = Math.max(0, Math.min(newY, view.getHeight() - circleUserWithNotch.getHeight()));
+
+                circleUserWithNotch.setX(newX);
+                circleUserWithNotch.setY(newY);
+            });
+        });
+    }
+
 
     public Quaternion multiplyQuat(Quaternion q1, Quaternion q2) {
         float w3, w2, w1, x3, x2, x1, y3, y2, y1, z3, z2, z1;
