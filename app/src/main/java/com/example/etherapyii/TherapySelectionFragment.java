@@ -11,6 +11,12 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 public class TherapySelectionFragment extends Fragment {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

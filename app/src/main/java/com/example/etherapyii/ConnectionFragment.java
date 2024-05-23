@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.os.IBinder;
 import android.util.Log;
@@ -55,6 +56,12 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
     View view;
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_connection, container, false);
@@ -62,11 +69,16 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
         //Variable Declarations
         BluetoothManager bluetoothManager = requireActivity().getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+        String therapy;
 
         //Buttons
         Button reset = view.findViewById(R.id.resetButton);
         Button connect = view.findViewById(R.id.connect);
         next = view.findViewById(R.id.next_btn);
+
+        // Getting Metric From Therapy Description
+        assert getArguments() != null;
+        therapy = getArguments().getString("therapy");
 
         //Bind the service when the activity is created
         requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
@@ -80,7 +92,6 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
                 Log.i("ConnectionPage", "Connect thread started");
                 requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), ConnectionFragment.this, Context.BIND_AUTO_CREATE);
 
-
                 if (!s1Connected) {
                     connectBoard();
                 }
@@ -92,10 +103,16 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
         });
 
         next.setOnClickListener(view2 -> {
-            // TODO: Inflate sensorPlacement fragment
-//            Intent intent = new Intent(ConnectionActivity.this, TherapySelection.class);
-//            startActivity(intent);
-//            finish();
+            Bundle bundle = new Bundle();
+            bundle.putString("therapy", therapy);
+
+            SensorPlacementFragment sensorPlacementFragment = new SensorPlacementFragment();
+            sensorPlacementFragment.setArguments(bundle);
+
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.therapyContainer, sensorPlacementFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         });
 
         reset.setOnClickListener(view2 -> {
