@@ -34,6 +34,7 @@ import com.mbientlab.metawear.data.Quaternion;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.SensorFusionBosch;
 
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -63,7 +64,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     private Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
     private String intent = "pose";
     private TextView distanceTV, HoldTV;
-    private ImageView circleUserWithNotch;
+    private ImageView circleUserWithNotch, circleGoalWithNotch;
     private int HOLD_TIME;
     private View view;
     private Handler uiHandler = new Handler();
@@ -90,13 +91,21 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         Button beginButton = view.findViewById(R.id.beginButton);
         Button stopButton = view.findViewById(R.id.btn_stop);
         circleUserWithNotch = view.findViewById(R.id.circle_user_with_notch);
+        circleGoalWithNotch = view.findViewById(R.id.circle_goal_with_notch);
+        int[] userCoordinates = new int[2];
         String therapyType;
         int reps, repsCompleted = 0;
         String repsText;
 
-        circleUserWithNotch.post(() -> {
-            initialX = circleUserWithNotch.getX() - (float) circleUserWithNotch.getWidth() / 2;
-            initialY = circleUserWithNotch.getY() - (float) circleUserWithNotch.getWidth() / 2;
+        circleGoalWithNotch.post(() -> {
+            Log.i("TherapyMainFragment", "circleUserWithNotch (X, Y): X - " + circleUserWithNotch.getX() + " Y - " + circleUserWithNotch.getY());
+//            initialX = circleGoalWithNotch.getX() + circleGoalWithNotch.getWidth() / 2 - circleUserWithNotch.getWidth() / 2;
+//            initialY = circleGoalWithNotch.getY() + circleGoalWithNotch.getHeight() / 2 - circleUserWithNotch.getHeight() / 2;
+//            circleUserWithNotch.setX(initialX);
+//            circleUserWithNotch.setY(initialY);
+            circleUserWithNotch.getLocationOnScreen(userCoordinates);
+            Log.i("TherapyMainFragment", "userCoordinates (X, Y): X - " + userCoordinates[0] + " Y - " + userCoordinates[1]);
+
         });
 
         // Get Intent
@@ -105,10 +114,11 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         therapyType = getArguments().getString("therapy");
         reps = getArguments().getInt("reps");
         HOLD_TIME = getArguments().getInt("holdTime");
+        Log.i("TherapyMainFragment", "therapyType: " + therapyType + " reps: " + reps + " holdTime: " + HOLD_TIME);
 
         // Set Title
-        switch (therapyType) {
-            case "Hott":
+        switch (Objects.requireNonNull(therapyType)) {
+            case "HOTT":
                 titleTV.setText("Head Orientation\nTherapy Tool");
                 break;
             default:
