@@ -83,7 +83,6 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_therapy_main, container, false);
 
-
         // Variable Declaration
         TextView titleTV = view.findViewById(R.id.titleTV);
         TextView repsTV = view.findViewById(R.id.repsTV);
@@ -105,7 +104,6 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
 //            circleUserWithNotch.setY(initialY);
             circleUserWithNotch.getLocationOnScreen(userCoordinates);
             Log.i("TherapyMainFragment", "userCoordinates (X, Y): X - " + userCoordinates[0] + " Y - " + userCoordinates[1]);
-
         });
 
         // Get Intent
@@ -190,8 +188,9 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
 
     }
 
+    // Pose Countdown
     public void startCountdown() {
-        long countdownTime = 3000; // This is the duration of pose
+        long countdownTime = 6000; // This is the duration of pose
         final long[] countdownDuration = {countdownTime};
         Button poseButton = view.findViewById(R.id.beginButton);
 
@@ -210,7 +209,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                     String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
                     Log.i("TherapyActivity", tlString);
                     getPose();
-                } else if (timeLeft == (countdownTime / 1000) - 1) {
+                } else if (timeLeft == (countdownTime / 1000) - 3) {
                     posing = true;
                 }
             }
