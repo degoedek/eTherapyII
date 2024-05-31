@@ -156,6 +156,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         stopButton.setOnClickListener(view2 -> {
             isClockRunning = false;
             therapyActive = false;
+            turnOffLEDs();
 
             Bundle bundle = new Bundle();
             // TODO: Add bundle extras here when needed
@@ -557,6 +558,20 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                     });
                     stopThread.start();
                 }
+        }
+    }
+
+    /**
+     * Turns off the sensor LEDs
+     */
+    public void turnOffLEDs() {
+        //Turn on LEDs
+        Led led, led2;
+        if ((led = board.getModule(Led.class)) != null) {
+            led.stop(true);
+        }
+        if ((led2 = board2.getModule(Led.class)) != null) {
+            led2.stop(true);
         }
     }
 }
