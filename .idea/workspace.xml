@@ -85,6 +85,11 @@
           <theme>@style/Theme.ETherapyII</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/popup_sensor_fusion_loading.xml">
+        <config>
+          <theme>@style/Theme.ETherapyII</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/menu/bottom_nav_menu.xml">
         <config>
           <theme>@style/Theme.ETherapyII</theme>
@@ -97,8 +102,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de878f84-49ff-46a3-a0a0-3d4ca6f2a0ad" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/loading_circle.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/popup_sensor_fusion_loading.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyMainFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyMainFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/ConnectionFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/ConnectionFragment.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -155,9 +162,9 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="layoutResourceFile" />
         <option value="resourceFile" />
         <option value="Class" />
+        <option value="layoutResourceFile" />
       </list>
     </option>
   </component>
@@ -189,11 +196,11 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "joey-test-branch",
+    "git-widget-placeholder": "sensor-visualization-test",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/stole/Desktop/College/SCARP2024/MetaWear-Android-MetaWear-App-main/MetaWear-Android-MetaWear-App-main",
-    "settings.editor.selected.configurable": "AndroidSdkUpdater"
+    "last_opened_file_path": "C:/Users/stole/Desktop/College/SCARP2023/SensorOutputDataTest",
+    "settings.editor.selected.configurable": "com.android.studio.ml.bot.mainConfigurable"
   }
 }]]></component>
   <component name="RecentsManager">

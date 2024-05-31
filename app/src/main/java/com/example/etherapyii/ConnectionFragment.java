@@ -2,6 +2,9 @@ package com.example.etherapyii;
 
 import static android.service.controls.ControlsProviderService.TAG;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -34,6 +37,7 @@ import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.Route;
 import com.mbientlab.metawear.Subscriber;
 import com.mbientlab.metawear.android.BtleService;
+import com.mbientlab.metawear.data.Quaternion;
 import com.mbientlab.metawear.module.Haptic;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.SensorFusionBosch;
@@ -45,6 +49,7 @@ import bolts.Continuation;
 import bolts.Task;
 
 public class ConnectionFragment extends Fragment implements ServiceConnection {
+    String therapy;
     BtleService.LocalBinder serviceBinder;
     private MetaWearBoard board, board2;
     boolean s1Connected = false;
@@ -54,6 +59,11 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
     int connectionColor = Color.parseColor("#FF26FF00");
     Button next;
     View view;
+    ObjectAnimator imageRotator;
+    AnimatorSet animatorSet;
+    int s1QuatListIndex = 0;
+    int s2QuatListIndex = 0;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -69,7 +79,7 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
         //Variable Declarations
         BluetoothManager bluetoothManager = requireActivity().getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
-        String therapy;
+
 
         //Buttons
         Button reset = view.findViewById(R.id.resetButton);
@@ -102,18 +112,6 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
             connectThread.start();
         });
 
-        next.setOnClickListener(view2 -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("therapy", therapy);
-
-            SensorPlacementFragment sensorPlacementFragment = new SensorPlacementFragment();
-            sensorPlacementFragment.setArguments(bundle);
-
-            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-            transaction.replace(R.id.therapyContainer, sensorPlacementFragment);
-            transaction.addToBackStack(null);
-            transaction.commit();
-        });
 
         reset.setOnClickListener(view2 -> {
             if (!s1Connected && !s2Connected) {
@@ -163,6 +161,7 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
         //Calibration Listeners:
         s1CalibrationInflater();
         s2CalibrationInflater();
+        checkSensorFusion();
 
 
         // Inflate the layout for this fragment
@@ -715,6 +714,145 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
         });
     }
 
+    public void checkSensorFusion() {
+        // Variable Declarations
+        AlertDialog loadingDialog;
+        Button next = view.findViewById(R.id.next_btn);
+
+
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(requireActivity());
+        builder1.setCancelable(false);
+        View view3 = getLayoutInflater().inflate(R.layout.popup_sensor_fusion_loading, null);
+
+        ImageView loadingImage = view3.findViewById(R.id.loadingImage);
+        TextView loadingText = view3.findViewById(R.id.loadingText);
+        TextView infoDisplay = view3.findViewById(R.id.infoDisplay);;
+
+        builder1.setView(view3);
+        loadingDialog = builder1.create();
+        next.setOnClickListener(view -> {
+            loadingDialog.show();
+            // More variable declarations
+            SensorFusionBosch sf1;
+            SensorFusionBosch sf2;
+            final int QuatListSize = 10;
+            Quaternion[] s1QuatList = new Quaternion[QuatListSize];
+            Quaternion[] s2QuatList = new Quaternion[QuatListSize];
+
+            // Define the rotation animation
+            imageRotator = ObjectAnimator.ofFloat(loadingImage, "rotation", 0f, 360f);
+            imageRotator.setDuration(2000);
+            imageRotator.setRepeatCount(ValueAnimator.INFINITE);
+
+            // Create AnimatorSet and start animation
+            animatorSet = new AnimatorSet();
+            animatorSet.playTogether(imageRotator);
+            animatorSet.start();
+
+            // Begin Sensor Fusion
+            if (board == null || board2 == null) {
+                // Commented out for testing purposes
+                // TODO: Add some form of exit outside of testing purposes
+            } else {
+                sf1 = board.getModule(SensorFusionBosch.class);
+                sf2 = board2.getModule(SensorFusionBosch.class);
+
+                sf1.configure()
+                        .mode(SensorFusionBosch.Mode.NDOF)
+                        .accRange(SensorFusionBosch.AccRange.AR_16G)
+                        .gyroRange(SensorFusionBosch.GyroRange.GR_2000DPS)
+                        .commit();
+                sf2.configure()
+                        .mode(SensorFusionBosch.Mode.NDOF)
+                        .accRange(SensorFusionBosch.AccRange.AR_16G)
+                        .gyroRange(SensorFusionBosch.GyroRange.GR_2000DPS)
+                        .commit();
+
+                sf1.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
+                    Log.i("SF Check", "Sensor 2: " + data.value(Quaternion.class).toString());
+                    if (s1QuatListIndex < QuatListSize) {
+                        s1QuatList[s1QuatListIndex] = data.value(Quaternion.class);
+                        Log.i("SF Check", "Sensor 1: " + s1QuatList[s1QuatListIndex].toString());
+                        s1QuatListIndex += 1;
+                    } else {
+                        stopSensorFusion(sf1);
+                    }
+                }))
+                .continueWith((Continuation<Route, Void>) task -> {
+                    sf1.quaternion().start();
+                    sf1.start();
+
+                    return null;
+                });
+
+                sf2.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
+                    Log.i("SF Check", "Sensor 2: " + data.value(Quaternion.class).toString());
+                    if (s2QuatListIndex < QuatListSize) {
+                        s2QuatList[s2QuatListIndex] = data.value(Quaternion.class);
+                        Log.i("SF Check", "Sensor 2: " + s2QuatList[s2QuatListIndex].toString());
+                        s2QuatListIndex += 1;
+                    } else {
+                        stopSensorFusion(sf2);
+                    }
+                }))
+                .continueWith((Continuation<Route, Void>) task -> {
+                    sf2.quaternion().start();
+                    sf2.start();
+
+                    return null;
+                });
+
+            }
+
+            loadingImage.postDelayed(() -> {
+                boolean fullConnection;
+
+                // fullConnection Check
+                if (board == null || board2 == null) {
+                    fullConnection = false;
+                } else {
+                    fullConnection = s1QuatList[QuatListSize - 1] != null && s2QuatList[QuatListSize - 1] != null;
+                }
+
+                if (fullConnection) {
+                    Log.i("SF Check", "Sensors Fully Connected");
+                    loadingDialog.dismiss();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("therapy", therapy);
+
+                    SensorPlacementFragment sensorPlacementFragment = new SensorPlacementFragment();
+                    sensorPlacementFragment.setArguments(bundle);
+
+                    FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+                    transaction.replace(R.id.therapyContainer, sensorPlacementFragment);
+                    transaction.addToBackStack(null);
+                    transaction.commit();
+                } else {
+                    String errorInstructions = "One or more of the sensors is not fully connected:\n";
+                    Log.i("SF Check", "Sensors Not Fully Connected");
+                    loadingText.setText("...OOPS!");
+                    if (s1QuatList[QuatListSize - 1] == null && s2QuatList[QuatListSize - 1] == null) {
+                        Log.i("SF Check", "Both sensors need calibrated");
+                        errorInstructions += "Sensor 1\nSensor 2\n";
+                    } else if (s1QuatList[QuatListSize - 1] == null) {
+                        Log.i("SF Check", "Sensor 1 needs calibrated");
+                        errorInstructions += "Sensor 1\n";
+                    } else if (s2QuatList[QuatListSize - 1] == null) {
+                        Log.i("SF Check", "Sensor 2 needs calibrated");
+                        errorInstructions += "Sensor 2\n";
+                    }
+                    errorInstructions += "Please close the app and try again - we're sorry! This is a bug with the hardware.";
+                    infoDisplay.setText(errorInstructions);
+                    loadingImage.setVisibility(View.INVISIBLE);
+                }
+
+            }, 5000); // Should be 2000 normally - at 5000 for testing
+
+
+        });
+
+    }
+
     public void resetSensorUI() {
         ImageView s1BatteryDisplay = view.findViewById(R.id.s1battery);
         ImageView s2BatteryDisplay = view.findViewById(R.id.s2battery);
@@ -780,6 +918,16 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
         s2GyroStatus.setText("Gyroscope: Unreliable");
         s2MagnetImage.setImageResource(R.drawable.connection_status_unreliable);
         s2MagnetStatus.setText("Magnetometer: Unreliable");
+
+
+    }
+
+    public void stopSensorFusion(SensorFusionBosch sf) {
+        Thread stopThread = new Thread(() -> {
+            sf.stop();
+            sf.quaternion().stop();
+        });
+        stopThread.start();
 
 
     }
