@@ -2,6 +2,9 @@ package com.example.etherapyii;
 
 import static android.service.controls.ControlsProviderService.TAG;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -10,35 +13,43 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
-import android.media.Image;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
 import android.os.IBinder;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.mbientlab.metawear.DeviceInformation;
 import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.Route;
 import com.mbientlab.metawear.Subscriber;
 import com.mbientlab.metawear.android.BtleService;
+import com.mbientlab.metawear.data.Quaternion;
 import com.mbientlab.metawear.module.Haptic;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.SensorFusionBosch;
+
+import java.util.Objects;
 
 import bolts.CancellationTokenSource;
 import bolts.Continuation;
 import bolts.Task;
 
-public class ConnectionActivity extends AppCompatActivity implements ServiceConnection {
+public class ConnectionFragment extends Fragment implements ServiceConnection {
+    String therapy;
     BtleService.LocalBinder serviceBinder;
     private MetaWearBoard board, board2;
     boolean s1Connected = false;
@@ -47,33 +58,50 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     boolean s2Calibrated = false;
     int connectionColor = Color.parseColor("#FF26FF00");
     Button next;
+    View view;
+    ObjectAnimator imageRotator;
+    AnimatorSet animatorSet;
+    int s1QuatListIndex = 0;
+    int s2QuatListIndex = 0;
+    Route s1Route, s2Route;
+
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_connection);
+    }
+
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        view = inflater.inflate(R.layout.fragment_connection, container, false);
 
         //Variable Declarations
-        BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
+        BluetoothManager bluetoothManager = requireActivity().getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
 
+
         //Buttons
-        Button reset = findViewById(R.id.resetButton);
-        Button connect = findViewById(R.id.connect);
-        next = findViewById(R.id.next_btn);
+        Button reset = view.findViewById(R.id.resetButton);
+        Button connect = view.findViewById(R.id.connect);
+        next = view.findViewById(R.id.next_btn);
+
+        // Getting Metric From Therapy Description
+        assert getArguments() != null;
+        therapy = getArguments().getString("therapy");
 
         //Bind the service when the activity is created
-        getApplicationContext().bindService(new Intent(this, BtleService.class), this, Context.BIND_AUTO_CREATE);
+        requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
 
         //onClickListeners
-        connect.setOnClickListener(view -> {
+        connect.setOnClickListener(view2 -> {
             //Bind the service when the activity is created
-            getApplicationContext().bindService(new Intent(this, BtleService.class), this, Context.BIND_AUTO_CREATE);
+            requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
 
             Thread connectThread = new Thread(() -> {
                 Log.i("ConnectionPage", "Connect thread started");
-                getApplicationContext().bindService(new Intent(ConnectionActivity.this, BtleService.class), ConnectionActivity.this, Context.BIND_AUTO_CREATE);
-
+                requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), ConnectionFragment.this, Context.BIND_AUTO_CREATE);
 
                 if (!s1Connected) {
                     connectBoard();
@@ -85,20 +113,35 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             connectThread.start();
         });
 
-        next.setOnClickListener(view -> {
-            Intent intent = new Intent(ConnectionActivity.this, TherapySelection.class);
-            startActivity(intent);
-            finish();
-        });
 
-        reset.setOnClickListener(view -> {
+        reset.setOnClickListener(view2 -> {
             if (!s1Connected && !s2Connected) {
-                Toast.makeText(getApplicationContext(), "No Sensors Connected", Toast.LENGTH_SHORT).show();
-                return;
+                Toast.makeText(requireActivity().getApplicationContext(), "No Sensors Connected", Toast.LENGTH_SHORT).show();
             } else {
-                //Reset Button Invisible
+                // Reset Button Invisible
                 connect.setVisibility(View.VISIBLE);
 
+                // Stop sensor fusion on both boards
+                if (board != null) {
+                    SensorFusionBosch sensorFusion = board.getModule(SensorFusionBosch.class);
+                    if (sensorFusion != null) {
+                        sensorFusion.configure()
+                                .mode(SensorFusionBosch.Mode.SLEEP)
+                                .commit();
+                    }
+                }
+
+                if (board2 != null) {
+                    SensorFusionBosch sensorFusion2 = board2.getModule(SensorFusionBosch.class);
+                    if (sensorFusion2 != null) {
+                        sensorFusion2.configure()
+                                .mode(SensorFusionBosch.Mode.SLEEP)
+                                .commit();
+                    }
+                }
+
+                // Disconnect the boards
+                assert board != null;
                 board.disconnectAsync();
                 board2.disconnectAsync();
 
@@ -108,11 +151,22 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                 s2Calibrated = false;
 
                 resetSensorUI();
+
+                // TODO: Restart the activity
+//                Intent intent = getIntent();
+//                finish();
+//                startActivity(intent);
             }
         });
+
         //Calibration Listeners:
         s1CalibrationInflater();
         s2CalibrationInflater();
+        checkSensorFusion();
+
+
+        // Inflate the layout for this fragment
+        return view;
     }
 
     @Override
@@ -128,9 +182,10 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
     }
 
+
     public void retrieveBoard() {
         // TODO: Convert this to a bluetooth scan rather than hard-coding MAC Addresses
-        final BluetoothManager btManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothManager btManager = (BluetoothManager) requireActivity().getSystemService(Context.BLUETOOTH_SERVICE);
         String macAddress1 = "ED:5B:0A:50:14:59";
         String macAddress2 = "FE:C2:4B:10:FB:D5";
         BluetoothDevice sensor = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(macAddress1);
@@ -144,9 +199,9 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     public void connectBoard() {
 
         board.connectAsync().continueWith(new Continuation<Void, Void>() {
-            final TextView sensorConnection1 = findViewById(R.id.SensorConnection1);
-            final Button connect = findViewById(R.id.connect);
-            final Button s1Calibrate = findViewById(R.id.s1Calibrate);
+            final TextView sensorConnection1 = view.findViewById(R.id.SensorConnection1);
+            final Button connect = view.findViewById(R.id.connect);
+            final Button s1Calibrate = view.findViewById(R.id.s1Calibrate);
 
 
             @Override
@@ -154,7 +209,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                 if (task.isFaulted()) {
                     Log.i("MainActivity", "Board 1: Failed to connect");
                     //Toast Message
-                    runOnUiThread(() -> Toast.makeText(getApplicationContext(), "Sensor 1 - Failed to Connect", Toast.LENGTH_SHORT).show());
+                    requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Sensor 1 - Failed to Connect", Toast.LENGTH_SHORT).show());
                 } else {
                     sensorConnection1.setText("Connected");
                     sensorConnection1.setBackgroundColor(connectionColor);
@@ -174,7 +229,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                     if (board.getModule(Haptic.class) != null) {
                         board.getModule(Haptic.class).startMotor(25.F, (short) 750);
                     }
-                    runOnUiThread(() -> {
+                    requireActivity().runOnUiThread(() -> {
                         s1Calibrate.setVisibility(View.VISIBLE);
 
                         if (s1Connected && s2Connected) {
@@ -195,9 +250,9 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
     public void connectBoard2() {
         board2.connectAsync().continueWith(new Continuation<Void, Void>() {
-            TextView sensorConnection2 = findViewById(R.id.SensorConnection2);
-            Button connect = findViewById(R.id.connect);
-            Button s2Calibrate = findViewById(R.id.s2Calibrate);
+            TextView sensorConnection2 = view.findViewById(R.id.SensorConnection2);
+            Button connect = view.findViewById(R.id.connect);
+            Button s2Calibrate = view.findViewById(R.id.s2Calibrate);
 
 
             @Override
@@ -205,7 +260,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                 if (task.isFaulted()) {
                     Log.i("MainActivity", "Board 2: Failed to connect");
                     //Toast Message
-                    runOnUiThread(() -> Toast.makeText(getApplicationContext(), "Sensor 2 - Failed to Connect", Toast.LENGTH_SHORT).show());
+                    requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Sensor 2 - Failed to Connect", Toast.LENGTH_SHORT).show());
                 } else {
                     sensorConnection2.setText("Connected");     //Connection color: FF26FF00
                     sensorConnection2.setBackgroundColor(connectionColor);
@@ -225,7 +280,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
                     if (board2.getModule(Haptic.class) != null) {
                         board2.getModule(Haptic.class).startMotor(30.F, (short) 750);
                     }
-                    runOnUiThread(() -> {
+                    requireActivity().runOnUiThread(() -> {
                         s2Calibrate.setVisibility(View.VISIBLE);
                         if (s1Connected && s2Connected) {
                             connect.setVisibility(View.GONE);
@@ -243,17 +298,16 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         });
     }
 
+    /** board - the MetaWearBoard that will have it's battery percent checked
+     * sensorNum - *currently* either a 1 or a 2, helps clarify which sensor display to change
+     */
     public void checkBattery(@NonNull MetaWearBoard boardId, int sensorNum) {
-        /** board - the MetaWearBoard that will have it's battery percent checked
-         * sensorNum - *currently* either a 1 or a 2, helps clarify which sensor display to change
-         */
-
 //        Log.i("MainActivity", "checkBattery Method Called");
-        TextView s1BP = findViewById(R.id.s1batteryPercent);        //Battery Percentages
-        TextView s2BP = findViewById(R.id.s2batteryPercent);
+        TextView s1BP = view.findViewById(R.id.s1batteryPercent);        //Battery Percentages
+        TextView s2BP = view.findViewById(R.id.s2batteryPercent);
 
-        ImageView s1B = findViewById(R.id.s1battery);               //Battery Icons
-        ImageView s2B = findViewById(R.id.s2battery);
+        ImageView s1B = view.findViewById(R.id.s1battery);               //Battery Icons
+        ImageView s2B = view.findViewById(R.id.s2battery);
 
         boardId.readBatteryLevelAsync().continueWith(task -> {
             int batteryPercentage = task.getResult();
@@ -261,7 +315,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             Log.i("MainActivity", "Sensor " + sensorNum + " Battery Level: " + batteryPercentage);
 
             //Updating UI
-            runOnUiThread(() -> {
+            requireActivity().runOnUiThread(() -> {
                 if (sensorNum == 1) {
                     String stringS1BP = "      " + batteryPercentage + "%";
                     Log.i("MainActivity", "Sensor 1 Case Entered");
@@ -302,16 +356,16 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     public void s1CalibrationInflater() {
         //Variable Declarations:
         AlertDialog s1CalibrationScreen;
-        Button s1Calibrate = findViewById(R.id.s1Calibrate);
+        Button s1Calibrate = view.findViewById(R.id.s1Calibrate);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
         builder.setCancelable(false);
         View view2 = getLayoutInflater().inflate(R.layout.popup_s1_calibration_screen, null);
 
         TextView s1AccelStatus = view2.findViewById(R.id.s1AccelStatus);
         TextView s1GyroStatus = view2.findViewById(R.id.s1GyroStatus);
         TextView s1MagnetStatus = view2.findViewById(R.id.s1MagnetStatus);
-        TextView sensorConnection1 = findViewById(R.id.SensorConnection1);
+        TextView sensorConnection1 = view.findViewById(R.id.SensorConnection1);
 
         ImageView s1AccelImage = view2.findViewById(R.id.s1AccelImage);
         ImageView s1GyroImage = view2.findViewById(R.id.s1GyroImage);
@@ -346,7 +400,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             sensorFusion.calibrate(cts.getToken(), state -> {
                 String calibrationState = state.toString();
 
-                runOnUiThread(() -> {
+                requireActivity().runOnUiThread(() -> {
                     int nextStateLoc = 34;          //This means the 34th char of calibrationState is the first letter of the accelerometer state
                     //HOW TO CALIBRATE: GYRO - LAY STILL ON TABLE   ACCEL - TURN 45 DEGREES ON 1 AXIS REPEATEDLY   MAGNET - CREATE ONE MOTION TO DO REPEATEDLY
                     //Lengths: H = 13, U = 10, M = 15, L = 12
@@ -484,16 +538,16 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
     public void s2CalibrationInflater() {
         //Variable Declarations:
         AlertDialog s2CalibrationScreen;
-        Button s2Calibrate = findViewById(R.id.s2Calibrate);
+        Button s2Calibrate = view.findViewById(R.id.s2Calibrate);
 
-        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(requireActivity());
         builder1.setCancelable(false);
         View view3 = getLayoutInflater().inflate(R.layout.popup_s2_calibration_screen, null);
 
         TextView s2AccelStatus = view3.findViewById(R.id.s2AccelStatus);
         TextView s2GyroStatus = view3.findViewById(R.id.s2GyroStatus);
         TextView s2MagnetStatus = view3.findViewById(R.id.s2MagnetStatus);
-        TextView sensorConnection2 = findViewById(R.id.SensorConnection2);
+        TextView sensorConnection2 = view.findViewById(R.id.SensorConnection2);
 
         ImageView s2AccelImage = view3.findViewById(R.id.s2AccelImage);
         ImageView s2GyroImage = view3.findViewById(R.id.s2GyroImage);
@@ -528,7 +582,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
             sensorFusion2.calibrate(cts2.getToken(), state -> {
                 String calibrationState2 = state.toString();
 
-                runOnUiThread(() -> {
+                requireActivity().runOnUiThread(() -> {
                     int nextStateLoc = 34;          //This means the 34th char of calibrationState is the first letter of the accelerometer state
                     //HOW TO CALIBRATE: GYRO - LAY STILL ON TABLE   ACCEL - TURN 45 DEGREES ON 1 AXIS REPEATEDLY   MAGNET - CREATE ONE MOTION TO DO REPEATEDLY
                     //Lengths: H = 13, U = 10, M = 15, L = 12
@@ -661,18 +715,159 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         });
     }
 
+    public void checkSensorFusion() {
+        // Variable Declarations
+        AlertDialog loadingDialog;
+        Button next = view.findViewById(R.id.next_btn);
+
+
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(requireActivity());
+        builder1.setCancelable(false);
+        View view3 = getLayoutInflater().inflate(R.layout.popup_sensor_fusion_loading, null);
+
+        ImageView loadingImage = view3.findViewById(R.id.loadingImage);
+        TextView loadingText = view3.findViewById(R.id.loadingText);
+        TextView infoDisplay = view3.findViewById(R.id.infoDisplay);;
+
+        builder1.setView(view3);
+        loadingDialog = builder1.create();
+        next.setOnClickListener(view -> {
+            loadingDialog.show();
+            // More variable declarations
+            SensorFusionBosch sf1;
+            SensorFusionBosch sf2;
+            final int QuatListSize = 10;
+            Quaternion[] s1QuatList = new Quaternion[QuatListSize];
+            Quaternion[] s2QuatList = new Quaternion[QuatListSize];
+
+            // Define the rotation animation
+            imageRotator = ObjectAnimator.ofFloat(loadingImage, "rotation", 0f, 360f);
+            imageRotator.setDuration(2000);
+            imageRotator.setRepeatCount(ValueAnimator.INFINITE);
+
+            // Create AnimatorSet and start animation
+            animatorSet = new AnimatorSet();
+            animatorSet.playTogether(imageRotator);
+            animatorSet.start();
+
+            // Begin Sensor Fusion
+            if (board == null || board2 == null) {
+                // Commented out for testing purposes
+                // TODO: Add some form of exit outside of testing purposes
+            } else {
+                sf1 = board.getModule(SensorFusionBosch.class);
+                sf2 = board2.getModule(SensorFusionBosch.class);
+
+                sf1.configure()
+                        .mode(SensorFusionBosch.Mode.NDOF)
+                        .accRange(SensorFusionBosch.AccRange.AR_16G)
+                        .gyroRange(SensorFusionBosch.GyroRange.GR_2000DPS)
+                        .commit();
+                sf2.configure()
+                        .mode(SensorFusionBosch.Mode.NDOF)
+                        .accRange(SensorFusionBosch.AccRange.AR_16G)
+                        .gyroRange(SensorFusionBosch.GyroRange.GR_2000DPS)
+                        .commit();
+
+                sf1.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
+                    Log.i("SF Check", "Sensor 2: " + data.value(Quaternion.class).toString());
+                    if (s1QuatListIndex < QuatListSize) {
+                        s1QuatList[s1QuatListIndex] = data.value(Quaternion.class);
+                        Log.i("SF Check", "Sensor 1: " + s1QuatList[s1QuatListIndex].toString());
+                        s1QuatListIndex += 1;
+                    } else {
+                        stopSensorFusion(sf1, 1);
+                    }
+                }))
+                .continueWith((Continuation<Route, Void>) task -> {
+                    s1Route = task.getResult();
+                    sf1.quaternion().start();
+                    sf1.start();
+
+                    return null;
+                });
+
+                sf2.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
+                    Log.i("SF Check", "Sensor 2: " + data.value(Quaternion.class).toString());
+                    if (s2QuatListIndex < QuatListSize) {
+                        s2QuatList[s2QuatListIndex] = data.value(Quaternion.class);
+                        Log.i("SF Check", "Sensor 2: " + s2QuatList[s2QuatListIndex].toString());
+                        s2QuatListIndex += 1;
+                    } else {
+                        stopSensorFusion(sf2, 2);
+                    }
+                }))
+                .continueWith((Continuation<Route, Void>) task -> {
+                    s2Route = task.getResult();
+                    sf2.quaternion().start();
+                    sf2.start();
+
+                    return null;
+                });
+
+            }
+
+            loadingImage.postDelayed(() -> {
+                boolean fullConnection;
+
+                // fullConnection Check
+                if (board == null || board2 == null) {
+                    fullConnection = false;
+                } else {
+                    fullConnection = s1QuatList[QuatListSize - 1] != null && s2QuatList[QuatListSize - 1] != null;
+                }
+
+                if (fullConnection) {
+                    Log.i("SF Check", "Sensors Fully Connected");
+                    loadingDialog.dismiss();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("therapy", therapy);
+
+                    SensorPlacementFragment sensorPlacementFragment = new SensorPlacementFragment();
+                    sensorPlacementFragment.setArguments(bundle);
+
+                    FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+                    transaction.replace(R.id.therapyContainer, sensorPlacementFragment);
+                    transaction.addToBackStack(null);
+                    transaction.commit();
+                } else {
+                    String errorInstructions = "One or more of the sensors is not fully connected:\n";
+                    Log.i("SF Check", "Sensors Not Fully Connected");
+                    loadingText.setText("...OOPS!");
+                    if (s1QuatList[QuatListSize - 1] == null && s2QuatList[QuatListSize - 1] == null) {
+                        Log.i("SF Check", "Both sensors need calibrated");
+                        errorInstructions += "Sensor 1\nSensor 2\n";
+                    } else if (s1QuatList[QuatListSize - 1] == null) {
+                        Log.i("SF Check", "Sensor 1 needs calibrated");
+                        errorInstructions += "Sensor 1\n";
+                    } else if (s2QuatList[QuatListSize - 1] == null) {
+                        Log.i("SF Check", "Sensor 2 needs calibrated");
+                        errorInstructions += "Sensor 2\n";
+                    }
+                    errorInstructions += "Please close the app and try again - we're sorry! This is a bug with the hardware.";
+                    infoDisplay.setText(errorInstructions);
+                    loadingImage.setVisibility(View.INVISIBLE);
+                }
+
+            }, 5000); // Should be 2000 normally - at 5000 for testing
+
+
+        });
+
+    }
+
     public void resetSensorUI() {
-        ImageView s1BatteryDisplay = findViewById(R.id.s1battery);
-        ImageView s2BatteryDisplay = findViewById(R.id.s2battery);
-        TextView s1BatteryPercent = findViewById(R.id.s1batteryPercent);
-        TextView s2BatteryPercent = findViewById(R.id.s2batteryPercent);
-        TextView s1ConnectedTV = findViewById(R.id.SensorConnection1);
-        TextView s2ConnectedTV = findViewById(R.id.SensorConnection2);
-        Button s1Calibrate = findViewById(R.id.s1Calibrate);
-        Button s2Calibrate = findViewById(R.id.s2Calibrate);
+        ImageView s1BatteryDisplay = view.findViewById(R.id.s1battery);
+        ImageView s2BatteryDisplay = view.findViewById(R.id.s2battery);
+        TextView s1BatteryPercent = view.findViewById(R.id.s1batteryPercent);
+        TextView s2BatteryPercent = view.findViewById(R.id.s2batteryPercent);
+        TextView s1ConnectedTV = view.findViewById(R.id.SensorConnection1);
+        TextView s2ConnectedTV = view.findViewById(R.id.SensorConnection2);
+        Button s1Calibrate = view.findViewById(R.id.s1Calibrate);
+        Button s2Calibrate = view.findViewById(R.id.s2Calibrate);
 
         // Sensor 1 Calibration Variables
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
         builder.setCancelable(false);
         View view2 = getLayoutInflater().inflate(R.layout.popup_s1_calibration_screen, null);
         TextView s1AccelStatus = view2.findViewById(R.id.s1AccelStatus);
@@ -684,7 +879,7 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
         Button s1close = view2.findViewById(R.id.close);
 
         // Sensor 2 Calibration Variables
-        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(requireActivity());
         builder1.setCancelable(false);
         View view3 = getLayoutInflater().inflate(R.layout.popup_s2_calibration_screen, null);
         TextView s2AccelStatus = view3.findViewById(R.id.s2AccelStatus);
@@ -730,4 +925,19 @@ public class ConnectionActivity extends AppCompatActivity implements ServiceConn
 
     }
 
+    public void stopSensorFusion(SensorFusionBosch sf, int sNum) {
+        Thread stopThread = new Thread(() -> {
+            if (sNum == 1) {
+                s1Route.remove();
+            }
+            if (sNum == 2) {
+                s2Route.remove();
+            }
+            sf.stop();
+            sf.quaternion().stop();
+        });
+        stopThread.start();
+
+
+    }
 }

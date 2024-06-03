@@ -18,8 +18,7 @@ Button therapy, stretching;
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_activity_selection, container, false);
         therapy = view.findViewById(R.id.btn_therapy);
@@ -27,7 +26,7 @@ Button therapy, stretching;
 
         //Therapy Button
         therapy.setOnClickListener(v -> {
-                Intent intent = new Intent(getActivity(), ConnectionActivity.class);
+                Intent intent = new Intent(getActivity(), TherapyContainer.class);
                 startActivity(intent);
             //getActivity().finish();
         });

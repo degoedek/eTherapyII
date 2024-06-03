@@ -10,32 +10,38 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
-
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.Route;
 import com.mbientlab.metawear.Subscriber;
 import com.mbientlab.metawear.android.BtleService;
 import com.mbientlab.metawear.data.Quaternion;
+import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.SensorFusionBosch;
+
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import bolts.Continuation;
 
 
-public class TherapyActivity extends AppCompatActivity implements ServiceConnection {
+public class TherapyMainFragment extends Fragment implements ServiceConnection {
     private BtleService.LocalBinder serviceBinder;
     private boolean isClockRunning = false, started = false, repStarted = false;
     private String time;
@@ -43,53 +49,75 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     private long startTime;
     private MetaWearBoard board, board2;
     private CountDownTimer repCountdown;
-    Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
-    Boolean posing = false, therapyActive = false;
-    int timeLeft;
-    DoublyLinkedList s1PoseList = new DoublyLinkedList();
-    DoublyLinkedList s2PoseList = new DoublyLinkedList();
-    final int RUNNING_AVG_SIZE = 5;
-    final float ACCURACY_THRESHOLD = 10F;
-    Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
-    Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
-    int s1Index = 0, s2Index = 0;
-    float currentDistance;
-    Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
-    Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
-    String intent = "pose";
-    TextView distanceTV, HoldTV;
-    int HOLD_TIME;
+    private Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
+    private Boolean posing = false, therapyActive = false;
+    private int timeLeft;
+    private DoublyLinkedList s1PoseList = new DoublyLinkedList();
+    private DoublyLinkedList s2PoseList = new DoublyLinkedList();
+    private final int RUNNING_AVG_SIZE = 5;
+    private final float ACCURACY_THRESHOLD = 10F;
+    private Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
+    private Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
+    private int s1Index = 0, s2Index = 0;
+    private float currentDistance;
+    private Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
+    private Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
+    private String intent = "pose";
+    private TextView distanceTV, HoldTV;
+    private ImageView circleUserWithNotch, circleGoalWithNotch;
+    private int HOLD_TIME;
+    private View view;
+    private Handler uiHandler = new Handler();
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private float[] s1Angles = new float[2];  // [yaw, pitch]
+    private float[] s2Angles = new float[2];
+    private float initialX, initialY;
+    private Route s1Route, s2Route;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_therapy);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        view = inflater.inflate(R.layout.fragment_therapy_main, container, false);
 
         // Variable Declaration
-        TextView titleTV = findViewById(R.id.titleTV);
-        TextView repsTV = findViewById(R.id.repsTV);
-        TextView timeTV = findViewById(R.id.timeTV);
-        Button beginButton = findViewById(R.id.beginButton);
-        Button stopButton = findViewById(R.id.btn_stop);
+        TextView titleTV = view.findViewById(R.id.titleTV);
+        TextView repsTV = view.findViewById(R.id.repsTV);
+        TextView timeTV = view.findViewById(R.id.timeTV);
+        Button beginButton = view.findViewById(R.id.beginButton);
+        Button stopButton = view.findViewById(R.id.btn_stop);
+        circleUserWithNotch = view.findViewById(R.id.circle_user_with_notch);
+        circleGoalWithNotch = view.findViewById(R.id.circle_goal_with_notch);
+        int[] userCoordinates = new int[2];
         String therapyType;
         int reps, repsCompleted = 0;
         String repsText;
 
+        circleGoalWithNotch.post(() -> {
+            Log.i("TherapyMainFragment", "circleUserWithNotch (X, Y): X - " + circleUserWithNotch.getX() + " Y - " + circleUserWithNotch.getY());
+//            initialX = circleGoalWithNotch.getX() + circleGoalWithNotch.getWidth() / 2 - circleUserWithNotch.getWidth() / 2;
+//            initialY = circleGoalWithNotch.getY() + circleGoalWithNotch.getHeight() / 2 - circleUserWithNotch.getHeight() / 2;
+//            circleUserWithNotch.setX(initialX);
+//            circleUserWithNotch.setY(initialY);
+            circleUserWithNotch.getLocationOnScreen(userCoordinates);
+            Log.i("TherapyMainFragment", "userCoordinates (X, Y): X - " + userCoordinates[0] + " Y - " + userCoordinates[1]);
+        });
+
         // Get Intent
-        Intent intent = getIntent();
-        therapyType = intent.getExtras().getString("Therapy");
-        reps = intent.getExtras().getInt("Reps");
-        HOLD_TIME = intent.getExtras().getInt("HoldTime");
+        // Getting Metric From Connection Fragment
+        assert getArguments() != null;
+        therapyType = getArguments().getString("therapy");
+        reps = getArguments().getInt("reps");
+        HOLD_TIME = getArguments().getInt("holdTime");
+        Log.i("TherapyMainFragment", "therapyType: " + therapyType + " reps: " + reps + " holdTime: " + HOLD_TIME);
 
         // Set Title
-        switch (therapyType) {
-            case "Hott":
+        switch (Objects.requireNonNull(therapyType)) {
+            case "HOTT":
                 titleTV.setText("Head Orientation\nTherapy Tool");
                 break;
             default:
@@ -102,31 +130,72 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         timeTV.setText("0:00");
 
         // Create Bluetooth Service Binding
-        getApplicationContext().bindService(new Intent(this, BtleService.class), this, Context.BIND_AUTO_CREATE);
+        requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
 
         handler = new Handler(Looper.getMainLooper());
 
         // Button Listeners
-        beginButton.setOnClickListener(view -> {
+        beginButton.setOnClickListener(view2 -> {
             if (!started) {
+                Led led;
+                if ((led = board.getModule(Led.class)) != null) {
+                    led.editPattern(Led.Color.RED, Led.PatternPreset.SOLID)
+                            .commit();
+                    led.play();
+                }
+
+                if ((led = board2.getModule(Led.class)) != null) {
+                    led.editPattern(Led.Color.BLUE, Led.PatternPreset.SOLID)
+                            .commit();
+                    led.play();
+                }
                 started = true;
                 startCountdown();
             }
         });
 
-        stopButton.setOnClickListener(view -> {
+        stopButton.setOnClickListener(view2 -> {
             isClockRunning = false;
             therapyActive = false;
+            turnOffLEDs();
+            stopSensorFusion("default");
 
-            // Adjusting Button Visibility
-            stopButton.setVisibility(View.GONE);
+            Bundle bundle = new Bundle();
+            // TODO: Add bundle extras here when needed
+
+            // Create the new fragment and set the bundle as its arguments
+            SummaryFragment summaryFragment = new SummaryFragment();
+            summaryFragment.setArguments(bundle);
+
+            // Replace the current fragment with the new one
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.therapyContainer, summaryFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         });
+
+        // Inflate the layout for this fragment
+        return view;
     }
 
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder service) {
+        Log.d("TherapyActivity", "Service Connected");
+        //Typecast the binder to the service's LocalBinder class
+        serviceBinder = (BtleService.LocalBinder) service;
+        retrieveBoard();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+
+    }
+
+    // Pose Countdown
     public void startCountdown() {
-        long countdownTime = 3000;
+        long countdownTime = 6000; // This is the duration of pose
         final long[] countdownDuration = {countdownTime};
-        Button poseButton = findViewById(R.id.beginButton);
+        Button poseButton = view.findViewById(R.id.beginButton);
 
         CountDownTimer mCountDownTimer = new CountDownTimer(countdownDuration[0], 1000) {
             @Override
@@ -143,16 +212,16 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                     String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
                     Log.i("TherapyActivity", tlString);
                     getPose();
-                } else if (timeLeft == (countdownTime / 1000) - 1) {
+                } else if (timeLeft == (countdownTime / 1000) - 3) {
                     posing = true;
                 }
             }
 
             @Override
             public void onFinish() {
-                TextView timeTV = findViewById(R.id.timeTV);
-                Button beginButton = findViewById(R.id.beginButton);
-                Button stopButton = findViewById(R.id.btn_stop);
+                TextView timeTV = view.findViewById(R.id.timeTV);
+                Button beginButton = view.findViewById(R.id.beginButton);
+                Button stopButton = view.findViewById(R.id.btn_stop);
 
                 // Stop Sensor Fusion
                 posing = false;
@@ -193,7 +262,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
                     time = String.format("%d:%02d", minutes, seconds);
                     timeTV.setText(time);
-                    distanceTV = findViewById(R.id.distanceTV);
+                    distanceTV = view.findViewById(R.id.distanceTV);
                     if (RelativeRotationCurrent != null && RelativeRotationPose != null) {
                         distanceTV.setText(String.format("Current Angle:\n%.3f", currentDistance));
                     }
@@ -217,7 +286,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
     }
 
     private void sensorFusion(MetaWearBoard board, int sensorNum) {
-        HoldTV = findViewById(R.id.HoldTV);
+        HoldTV = view.findViewById(R.id.HoldTV);
 
         SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
         sf.resetOrientation();
@@ -254,10 +323,18 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                                     Log.i("TherapyActivity", "Sensor 1: " + data.value(Quaternion.class));
                                     s1RunningAverage[s1Index] = data.value(Quaternion.class);
                                     s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+
+                                    // For UI Updating
+                                    s1Angles = quaternionToAngles(data.value(Quaternion.class), sensorNum);
                                 } else {
                                     Log.i("TherapyActivity", "Sensor 2: " + data.value(Quaternion.class));
                                     s2RunningAverage[s2Index] = data.value(Quaternion.class);
                                     s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+
+                                    // UI Updating
+                                    s2Angles = quaternionToAngles(data.value(Quaternion.class), sensorNum);
+                                    updateCirclePosition(s1Angles, s2Angles);
+
                                 }
 
                                 // Computing Running Averages
@@ -282,7 +359,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                                             public void onTick(long l) {
                                                 Log.i("TherapyActivity", "Hold time remaining: " + l / 1000 + " seconds");
                                                 // Update the UI to show the remaining hold time
-                                                runOnUiThread(() -> HoldTV.setText(String.format("Hold time remaining:\n%.1f", (float) l / 1000)));
+                                                getActivity().runOnUiThread(() -> HoldTV.setText(String.format("Hold time remaining:\n%.1f", (float) l / 1000)));
                                             }
 
                                             @Override
@@ -307,6 +384,11 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
                 }))
                 .continueWith((Continuation<Route, Void>) task -> {
+                    if (sensorNum == 1) {
+                        s1Route = task.getResult();
+                    } else {
+                        s2Route = task.getResult();
+                    }
                     sf.resetOrientation();
                     sf.quaternion().start();
                     sf.start();
@@ -315,24 +397,12 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
     }
 
-    @Override
-    public void onServiceConnected(ComponentName componentName, IBinder service) {
-        Log.d("TherapyActivity", "Service Connected");
-        //Typecast the binder to the service's LocalBinder class
-        serviceBinder = (BtleService.LocalBinder) service;
-        retrieveBoard();
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName componentName) {
-
-    }
 
     /**
      * Uses the MAC addresses of the sensors to make sure that they are connected
      */
     public void retrieveBoard() {
-        final BluetoothManager btManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothManager btManager = (BluetoothManager) requireActivity().getSystemService(Context.BLUETOOTH_SERVICE);
         //Has the haptic coin
         String macAddress1 = "ED:5B:0A:50:14:59";
         BluetoothDevice sensor = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(macAddress1);
@@ -344,6 +414,54 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
         board = serviceBinder.getMetaWearBoard(sensor);
         board2 = serviceBinder.getMetaWearBoard(sensor2);
     }
+
+    private float[] quaternionToAngles(Quaternion q, int sensorNum) {
+        float yaw, pitch;
+
+        // NOTE: This is probably wrong
+
+        if (sensorNum == 1) {
+            // Yaw (rotation around y-axis)
+            yaw = (float) Math.atan2(2.0 * (q.w() * q.y() + q.x() * q.z()), 1.0 - 2.0 * (q.y() * q.y() + q.x() * q.x()));
+            // Pitch (rotation around z-axis)
+            pitch = (float) Math.asin(2.0 * (q.w() * q.z() - q.y() * q.x()));
+        } else {
+            // Yaw (rotation around y-axis)
+            yaw = (float) Math.atan2(2.0 * (q.w() * q.y() + q.x() * q.z()), 1.0 - 2.0 * (q.y() * q.y() + q.x() * q.x()));
+            // Pitch (rotation around x-axis)
+            pitch = (float) Math.asin(2.0 * (q.w() * q.x() - q.z() * q.y()));
+        }
+
+        // New calculation
+//        // Yaw (rotation around y-axis)
+//        yaw = (float) Math.atan2(2.0 * (q.w() * q.y() + q.x() * q.z()), 1.0 - 2.0 * (q.y() * q.y() + q.x() * q.x()));
+//        // Pitch (rotation around x-axis)
+//        pitch = (float) Math.asin(2.0 * (q.w() * q.x() - q.z() * q.y()));
+
+        return new float[]{yaw, pitch};
+    }
+
+    private void updateCirclePosition(float[] s1Angles, float[] s2Angles) {
+        executorService.execute(() -> {
+            // Calculate the position difference based on angles
+            float dx = (s2Angles[1] - s1Angles[1]) * 100; // Pitch difference
+            float dy = (s2Angles[0] - s1Angles[0]) * 100; // Yaw difference
+
+            uiHandler.post(() -> {
+                // Update UI with new position
+                float newX = initialX + dx - (float) circleUserWithNotch.getWidth() / 2;
+                float newY = initialY + dy - (float) circleUserWithNotch.getHeight() / 2;
+
+                // Ensure the circles stay within the screen bounds
+                newX = Math.max(0, Math.min(newX, view.getWidth() - circleUserWithNotch.getWidth()));
+                newY = Math.max(0, Math.min(newY, view.getHeight() - circleUserWithNotch.getHeight()));
+
+                circleUserWithNotch.setX(newX);
+                circleUserWithNotch.setY(newY);
+            });
+        });
+    }
+
 
     public Quaternion multiplyQuat(Quaternion q1, Quaternion q2) {
         float w3, w2, w1, x3, x2, x1, y3, y2, y1, z3, z2, z1;
@@ -396,6 +514,10 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
 
     public float quaternionDistance(Quaternion q1, Quaternion q2) {
         float dotProduct = q1.w() * q2.w() + q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z();
+
+        // Preventing a divide by zero error
+        if (dotProduct > .999 && dotProduct < 1.001) return 0;
+
         return (float) (Math.acos(2 * dotProduct * dotProduct - 1) * (180/ 3.14159));
     }
 
@@ -430,6 +552,7 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                         Log.i("stopSensorFusion", "Sensor 1 should stop sensor fusion");
                         sensorFusion.stop();
                         sensorFusion.quaternion().stop();
+                        s1Route.remove();
                     });
                     stopThread.start();
                 }
@@ -440,9 +563,24 @@ public class TherapyActivity extends AppCompatActivity implements ServiceConnect
                         Log.i("stopSensorFusion", "Sensor 2 should stop sensor fusion");
                         sensorFusion2.quaternion().stop();
                         sensorFusion2.stop();
+                        s2Route.remove();
                     });
                     stopThread.start();
                 }
+        }
+    }
+
+    /**
+     * Turns off the sensor LEDs
+     */
+    public void turnOffLEDs() {
+        //Turn on LEDs
+        Led led, led2;
+        if ((led = board.getModule(Led.class)) != null) {
+            led.stop(true);
+        }
+        if ((led2 = board2.getModule(Led.class)) != null) {
+            led2.stop(true);
         }
     }
 }
