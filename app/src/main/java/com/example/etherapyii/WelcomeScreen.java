@@ -18,20 +18,7 @@ public class WelcomeScreen extends Fragment {
     ObjectAnimator notchMove, notchRotate;
     AnimatorSet animatorSet;
     ImageView surfaceNotch;
-    boolean showWelcome;
     private int animationDuration = 2000;
-    /*public WelcomeScreen() {
-        // Required empty public constructor
-    }
-*/
-
-/*    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-
-        }
-    }*/
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
