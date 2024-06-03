@@ -72,6 +72,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     private float[] s1Angles = new float[2];  // [yaw, pitch]
     private float[] s2Angles = new float[2];
     private float initialX, initialY;
+    private Route s1Route, s2Route;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -157,6 +158,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
             isClockRunning = false;
             therapyActive = false;
             turnOffLEDs();
+            stopSensorFusion("default");
 
             Bundle bundle = new Bundle();
             // TODO: Add bundle extras here when needed
@@ -382,6 +384,11 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
 
                 }))
                 .continueWith((Continuation<Route, Void>) task -> {
+                    if (sensorNum == 1) {
+                        s1Route = task.getResult();
+                    } else {
+                        s2Route = task.getResult();
+                    }
                     sf.resetOrientation();
                     sf.quaternion().start();
                     sf.start();
@@ -545,6 +552,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                         Log.i("stopSensorFusion", "Sensor 1 should stop sensor fusion");
                         sensorFusion.stop();
                         sensorFusion.quaternion().stop();
+                        s1Route.remove();
                     });
                     stopThread.start();
                 }
@@ -555,6 +563,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                         Log.i("stopSensorFusion", "Sensor 2 should stop sensor fusion");
                         sensorFusion2.quaternion().stop();
                         sensorFusion2.stop();
+                        s2Route.remove();
                     });
                     stopThread.start();
                 }
