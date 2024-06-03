@@ -63,6 +63,7 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
     AnimatorSet animatorSet;
     int s1QuatListIndex = 0;
     int s2QuatListIndex = 0;
+    Route s1Route, s2Route;
 
 
     @Override
@@ -775,10 +776,11 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
                         Log.i("SF Check", "Sensor 1: " + s1QuatList[s1QuatListIndex].toString());
                         s1QuatListIndex += 1;
                     } else {
-                        stopSensorFusion(sf1);
+                        stopSensorFusion(sf1, 1);
                     }
                 }))
                 .continueWith((Continuation<Route, Void>) task -> {
+                    s1Route = task.getResult();
                     sf1.quaternion().start();
                     sf1.start();
 
@@ -792,10 +794,11 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
                         Log.i("SF Check", "Sensor 2: " + s2QuatList[s2QuatListIndex].toString());
                         s2QuatListIndex += 1;
                     } else {
-                        stopSensorFusion(sf2);
+                        stopSensorFusion(sf2, 2);
                     }
                 }))
                 .continueWith((Continuation<Route, Void>) task -> {
+                    s2Route = task.getResult();
                     sf2.quaternion().start();
                     sf2.start();
 
@@ -922,8 +925,14 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
 
     }
 
-    public void stopSensorFusion(SensorFusionBosch sf) {
+    public void stopSensorFusion(SensorFusionBosch sf, int sNum) {
         Thread stopThread = new Thread(() -> {
+            if (sNum == 1) {
+                s1Route.remove();
+            }
+            if (sNum == 2) {
+                s2Route.remove();
+            }
             sf.stop();
             sf.quaternion().stop();
         });
