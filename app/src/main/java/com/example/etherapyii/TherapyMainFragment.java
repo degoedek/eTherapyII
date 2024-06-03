@@ -69,8 +69,8 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     private View view;
     private Handler uiHandler = new Handler();
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private float[] s1Angles = new float[2];  // [yaw, pitch]
-    private float[] s2Angles = new float[2];
+    private double[] s1Angles = new double[3];
+    private double[] s2Angles = new double[3];
     private float initialX, initialY;
     private Route s1Route, s2Route;
 
@@ -99,10 +99,10 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
 
         circleGoalWithNotch.post(() -> {
             Log.i("TherapyMainFragment", "circleUserWithNotch (X, Y): X - " + circleUserWithNotch.getX() + " Y - " + circleUserWithNotch.getY());
-//            initialX = circleGoalWithNotch.getX() + circleGoalWithNotch.getWidth() / 2 - circleUserWithNotch.getWidth() / 2;
-//            initialY = circleGoalWithNotch.getY() + circleGoalWithNotch.getHeight() / 2 - circleUserWithNotch.getHeight() / 2;
-//            circleUserWithNotch.setX(initialX);
-//            circleUserWithNotch.setY(initialY);
+            initialX = circleGoalWithNotch.getX() + circleGoalWithNotch.getWidth() / 2 - circleUserWithNotch.getWidth() / 2;
+            initialY = circleGoalWithNotch.getY() + circleGoalWithNotch.getHeight() / 2 - circleUserWithNotch.getHeight() / 2;
+            circleUserWithNotch.setX(initialX);
+            circleUserWithNotch.setY(initialY);
             circleUserWithNotch.getLocationOnScreen(userCoordinates);
             Log.i("TherapyMainFragment", "userCoordinates (X, Y): X - " + userCoordinates[0] + " Y - " + userCoordinates[1]);
         });
@@ -325,14 +325,14 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                                     s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
 
                                     // For UI Updating
-                                    s1Angles = quaternionToAngles(data.value(Quaternion.class), sensorNum);
+                                    s1Angles = quaternionToEulerAngles(data.value(Quaternion.class), "zyx");
                                 } else {
                                     Log.i("TherapyActivity", "Sensor 2: " + data.value(Quaternion.class));
                                     s2RunningAverage[s2Index] = data.value(Quaternion.class);
                                     s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
 
                                     // UI Updating
-                                    s2Angles = quaternionToAngles(data.value(Quaternion.class), sensorNum);
+                                    s2Angles = quaternionToEulerAngles(data.value(Quaternion.class), "xyz");
                                     updateCirclePosition(s1Angles, s2Angles);
 
                                 }
@@ -415,49 +415,24 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         board2 = serviceBinder.getMetaWearBoard(sensor2);
     }
 
-    private float[] quaternionToAngles(Quaternion q, int sensorNum) {
-        float yaw, pitch;
 
-        // NOTE: This is probably wrong
-
-        if (sensorNum == 1) {
-            // Yaw (rotation around y-axis)
-            yaw = (float) Math.atan2(2.0 * (q.w() * q.y() + q.x() * q.z()), 1.0 - 2.0 * (q.y() * q.y() + q.x() * q.x()));
-            // Pitch (rotation around z-axis)
-            pitch = (float) Math.asin(2.0 * (q.w() * q.z() - q.y() * q.x()));
-        } else {
-            // Yaw (rotation around y-axis)
-            yaw = (float) Math.atan2(2.0 * (q.w() * q.y() + q.x() * q.z()), 1.0 - 2.0 * (q.y() * q.y() + q.x() * q.x()));
-            // Pitch (rotation around x-axis)
-            pitch = (float) Math.asin(2.0 * (q.w() * q.x() - q.z() * q.y()));
-        }
-
-        // New calculation
-//        // Yaw (rotation around y-axis)
-//        yaw = (float) Math.atan2(2.0 * (q.w() * q.y() + q.x() * q.z()), 1.0 - 2.0 * (q.y() * q.y() + q.x() * q.x()));
-//        // Pitch (rotation around x-axis)
-//        pitch = (float) Math.asin(2.0 * (q.w() * q.x() - q.z() * q.y()));
-
-        return new float[]{yaw, pitch};
-    }
-
-    private void updateCirclePosition(float[] s1Angles, float[] s2Angles) {
+    private void updateCirclePosition(double[] s1Angles, double[] s2Angles) {
         executorService.execute(() -> {
             // Calculate the position difference based on angles
-            float dx = (s2Angles[1] - s1Angles[1]) * 100; // Pitch difference
-            float dy = (s2Angles[0] - s1Angles[0]) * 100; // Yaw difference
+            double dx = (s2Angles[1] - s1Angles[1]) * 100; // Pitch difference
+            double dy = (s2Angles[0] - s1Angles[0]) * 100; // Yaw difference
 
             uiHandler.post(() -> {
                 // Update UI with new position
-                float newX = initialX + dx - (float) circleUserWithNotch.getWidth() / 2;
-                float newY = initialY + dy - (float) circleUserWithNotch.getHeight() / 2;
+                double newX = initialX + dx - (double) circleUserWithNotch.getWidth() / 2;
+                double newY = initialY + dy - (double) circleUserWithNotch.getHeight() / 2;
 
                 // Ensure the circles stay within the screen bounds
                 newX = Math.max(0, Math.min(newX, view.getWidth() - circleUserWithNotch.getWidth()));
                 newY = Math.max(0, Math.min(newY, view.getHeight() - circleUserWithNotch.getHeight()));
 
-                circleUserWithNotch.setX(newX);
-                circleUserWithNotch.setY(newY);
+                circleUserWithNotch.setX((float) newX);
+                circleUserWithNotch.setY((float) newY);
             });
         });
     }
@@ -582,5 +557,74 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         if ((led2 = board2.getModule(Led.class)) != null) {
             led2.stop(true);
         }
+    }
+
+    public double[] threeAxisRotation(double r11, double r12, double r21, double r31, double r32) {
+        double[] angles = new double[3];
+
+        angles[0] = Math.atan2(r31, r32);
+        angles[1] = Math.asin(r21);
+        angles[2] = Math.atan2(r11, r12);
+
+        return angles;
+    }
+
+    public double[] quaternionToEulerAngles(Quaternion q, String seq) {
+        double[] rotations = new double[3];
+
+        switch(seq) {
+            case "zyx":
+                rotations = threeAxisRotation( 2*(q.x()*q.y() + q.w()*q.z()),
+                        q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z(),
+                        -2*(q.x()*q.z() - q.w()*q.y()),
+                        2*(q.y()*q.z() + q.w()*q.x()),
+                        q.w()*q.w() - q.x()*q.x() - q.y()*q.y() + q.z()*q.z());
+                break;
+
+            case "zxy":
+                rotations = threeAxisRotation( -2*(q.x()*q.y() - q.w()*q.z()),
+                        q.w()*q.w() - q.x()*q.x() + q.y()*q.y() - q.z()*q.z(),
+                        2*(q.y()*q.z() + q.w()*q.x()),
+                        -2*(q.x()*q.z() - q.w()*q.y()),
+                        q.w()*q.w() - q.x()*q.x() - q.y()*q.y() + q.z()*q.z());
+                break;
+
+            case "yxz":
+                rotations = threeAxisRotation( 2*(q.x()*q.z() + q.w()*q.y()),
+                        q.w()*q.w() - q.x()*q.x() - q.y()*q.y() + q.z()*q.z(),
+                        -2*(q.y()*q.z() - q.w()*q.x()),
+                        2*(q.x()*q.y() + q.w()*q.z()),
+                        q.w()*q.w() - q.x()*q.x() + q.y()*q.y() - q.z()*q.z());
+                break;
+
+            case "yzx":
+                rotations = threeAxisRotation( -2*(q.x()*q.z() - q.w()*q.y()),
+                        q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z(),
+                        2*(q.x()*q.y() + q.w()*q.z()),
+                        -2*(q.y()*q.z() - q.w()*q.x()),
+                        q.w()*q.w() - q.x()*q.x() + q.y()*q.y() - q.z()*q.z());
+                break;
+
+            case "xyz":
+                rotations = threeAxisRotation( -2*(q.y()*q.z() - q.w()*q.x()),
+                        q.w()*q.w() - q.x()*q.x() - q.y()*q.y() + q.z()*q.z(),
+                        2*(q.x()*q.z() + q.w()*q.y()),
+                        -2*(q.x()*q.y() - q.w()*q.z()),
+                        q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z());
+                break;
+
+            case "xzy":
+                rotations = threeAxisRotation( 2*(q.y()*q.z() + q.w()*q.x()),
+                        q.w()*q.w() - q.x()*q.x() + q.y()*q.y() - q.z()*q.z(),
+                        -2*(q.x()*q.y() - q.w()*q.z()),
+                        2*(q.x()*q.z() + q.w()*q.y()),
+                        q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z());
+                break;
+
+            default:
+                Log.i("EulerConversion", "Improper Sequence Entered");
+                break;
+        }
+        return rotations;
     }
 }
