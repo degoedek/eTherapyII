@@ -808,13 +808,15 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
             }
 
             loadingImage.postDelayed(() -> {
-                boolean fullConnection;
+                boolean fullConnection = true;
 
                 // fullConnection Check
                 if (board == null || board2 == null) {
                     fullConnection = false;
                 } else {
-                    fullConnection = s1QuatList[QuatListSize - 1] != null && s2QuatList[QuatListSize - 1] != null;
+                    if (s1QuatList[QuatListSize - 1] == null || s2QuatList[QuatListSize - 1] == null) {
+                        fullConnection = false;
+                    }
                 }
 
                 if (fullConnection) {

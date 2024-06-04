@@ -69,6 +69,8 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     private View view;
     private Handler uiHandler = new Handler();
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private double[] s1PoseAngles = new double[3];
+    private double[] s2PoseAngles = new double[3];
     private double[] s1Angles = new double[3];
     private double[] s2Angles = new double[3];
     private float initialX, initialY;
@@ -223,7 +225,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                 Button beginButton = view.findViewById(R.id.beginButton);
                 Button stopButton = view.findViewById(R.id.btn_stop);
 
-                // Stop Sensor Fusion
+                // Stop Pose
                 posing = false;
 
                 // Calculate Pose Averages
@@ -231,8 +233,12 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                 s1Pose = normalize(s1Pose);
                 s2Pose = s2PoseList.averageQuaternions();
                 s2Pose = normalize(s2Pose);
-                RelativeRotationPose = findRelativeRotation(s1Pose, s2Pose);
-                Log.i("TherapyActivity", "Relative Rotation Pose: " + RelativeRotationPose);
+
+                s1PoseAngles = quaternionToEulerAngles(s1Pose, "zyx");
+                s2PoseAngles = quaternionToEulerAngles(s2Pose, "xyz");
+
+                Log.i("TherapyActivity", "S1 Pose Angles - Z = " + s1PoseAngles[0] + " Y = " + s1PoseAngles[1] + " X = " + s1PoseAngles[2]);
+                Log.i("TherapyActivity", "S2 Pose Angles - X = " + s2PoseAngles[0] + " Y = " + s2PoseAngles[1] + " Z = " + s2PoseAngles[2]);
 
 
                 // Start Clock
@@ -289,7 +295,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         HoldTV = view.findViewById(R.id.HoldTV);
 
         SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
-        sf.resetOrientation();
+//        sf.resetOrientation();
 
 
         // use ndof mode with +/-16g acc range and 2000dps gyro range
@@ -323,61 +329,22 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                                     Log.i("TherapyActivity", "Sensor 1: " + data.value(Quaternion.class));
                                     s1RunningAverage[s1Index] = data.value(Quaternion.class);
                                     s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
-
-                                    // For UI Updating
-                                    s1Angles = quaternionToEulerAngles(data.value(Quaternion.class), "zyx");
                                 } else {
                                     Log.i("TherapyActivity", "Sensor 2: " + data.value(Quaternion.class));
                                     s2RunningAverage[s2Index] = data.value(Quaternion.class);
                                     s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
-
-                                    // UI Updating
-                                    s2Angles = quaternionToEulerAngles(data.value(Quaternion.class), "xyz");
-                                    updateCirclePosition(s1Angles, s2Angles);
-
                                 }
 
                                 // Computing Running Averages
                                 s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
                                 s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
 
-                                // Computing Relative Rotation and Distance
-                                RelativeRotationCurrent = findRelativeRotation(normalize(s1CurrentQuat), normalize(s2CurrentQuat));
-                                currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
-                                Log.i("TherapyActivity", "Distance - " + currentDistance);
+                                // Compute Euler Angles From Averages
+                                s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
+                                s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
 
-                                // Checking Rep Completion Status
-                                // ChatGPT - this is where I want the timer implemented
-                                if (currentDistance <= ACCURACY_THRESHOLD) {
-                                    // TODO: Have a timer for this, add haptic feedback on completion, and update reps completed
-                                    if (!repStarted) {
-                                        repStarted = true;
-
-                                        repCountdown = new CountDownTimer(HOLD_TIME, 1000) {
-
-                                            @Override
-                                            public void onTick(long l) {
-                                                Log.i("TherapyActivity", "Hold time remaining: " + l / 1000 + " seconds");
-                                                // Update the UI to show the remaining hold time
-                                                getActivity().runOnUiThread(() -> HoldTV.setText(String.format("Hold time remaining:\n%.1f", (float) l / 1000)));
-                                            }
-
-                                            @Override
-                                            public void onFinish() {
-                                                Log.i("TherapyActivity", "Hold time finished. Rep completed!");
-                                                repStarted = false;
-                                                // Add haptic feedback here if desired
-                                                // Update the reps completed here
-                                            }
-                                        }.start();
-                                    }
-                                } else {
-                                    if (repStarted) {
-                                        repStarted = false;
-                                        // TODO: Stop timer
-
-                                    }
-                                }
+                                Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
+                                Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
                             }
                             break;
                     }
@@ -389,7 +356,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                     } else {
                         s2Route = task.getResult();
                     }
-                    sf.resetOrientation();
+//                    sf.resetOrientation();
                     sf.quaternion().start();
                     sf.start();
                     return null;
@@ -562,9 +529,9 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     public double[] threeAxisRotation(double r11, double r12, double r21, double r31, double r32) {
         double[] angles = new double[3];
 
-        angles[0] = Math.atan2(r31, r32);
-        angles[1] = Math.asin(r21);
-        angles[2] = Math.atan2(r11, r12);
+        angles[0] = Math.atan2(r31, r32) * (180/Math.PI);
+        angles[1] = Math.asin(r21) * (180/Math.PI);
+        angles[2] = Math.atan2(r11, r12) * (180/Math.PI);
 
         return angles;
     }
