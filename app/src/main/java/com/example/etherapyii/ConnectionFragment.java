@@ -38,8 +38,10 @@ import com.mbientlab.metawear.Route;
 import com.mbientlab.metawear.Subscriber;
 import com.mbientlab.metawear.android.BtleService;
 import com.mbientlab.metawear.data.Quaternion;
+import com.mbientlab.metawear.module.Debug;
 import com.mbientlab.metawear.module.Haptic;
 import com.mbientlab.metawear.module.Led;
+import com.mbientlab.metawear.module.Macro;
 import com.mbientlab.metawear.module.SensorFusionBosch;
 
 import java.util.Objects;
@@ -121,29 +123,14 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
                 // Reset Button Invisible
                 connect.setVisibility(View.VISIBLE);
 
-                // Stop sensor fusion on both boards
-                if (board != null) {
-                    SensorFusionBosch sensorFusion = board.getModule(SensorFusionBosch.class);
-                    if (sensorFusion != null) {
-                        sensorFusion.configure()
-                                .mode(SensorFusionBosch.Mode.SLEEP)
-                                .commit();
-                    }
-                }
-
-                if (board2 != null) {
-                    SensorFusionBosch sensorFusion2 = board2.getModule(SensorFusionBosch.class);
-                    if (sensorFusion2 != null) {
-                        sensorFusion2.configure()
-                                .mode(SensorFusionBosch.Mode.SLEEP)
-                                .commit();
-                    }
-                }
+                // Reset Sensors
+                resetSensor(board);
+                resetSensor(board2);
 
                 // Disconnect the boards
-                assert board != null;
-                board.disconnectAsync();
-                board2.disconnectAsync();
+                if (board != null) board.disconnectAsync();
+                if (board2 != null) board2.disconnectAsync();
+
 
                 s1Connected = false;
                 s2Connected = false;
@@ -153,9 +140,7 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
                 resetSensorUI();
 
                 // TODO: Restart the activity
-//                Intent intent = getIntent();
-//                finish();
-//                startActivity(intent);
+                restartCurrentFragment();
             }
         });
 
@@ -167,6 +152,17 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
 
         // Inflate the layout for this fragment
         return view;
+    }
+
+    public void restartCurrentFragment() {
+        FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+        Fragment currentFragment = getParentFragmentManager().findFragmentById(R.id.therapyContainer);
+
+        if (currentFragment != null) {
+            fragmentTransaction.detach(currentFragment);
+            fragmentTransaction.attach(currentFragment);
+            fragmentTransaction.commit();
+        }
     }
 
     @Override
@@ -181,6 +177,16 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
     public void onServiceDisconnected(ComponentName componentName) {
 
     }
+
+    public Task<Void> resetSensor(MetaWearBoard b) {
+        if (b == null) return null;
+
+        // Resetting Sensor
+        b.getModule(Macro.class).eraseAll();
+        b.getModule(Debug.class).resetAfterGc();
+        return b.getModule(Debug.class).disconnectAsync();
+    }
+
 
 
     public void retrieveBoard() {
@@ -386,6 +392,15 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
                 led1.play();
             }
 
+            if (!s1Calibrated) {
+                s1GyroImage.setVisibility(View.VISIBLE);
+                s1GyroStatus.setVisibility(View.VISIBLE);
+                s1MagnetImage.setVisibility(View.VISIBLE);
+                s1MagnetStatus.setVisibility(View.VISIBLE);
+                s1Calibrate.setVisibility(View.VISIBLE);
+                close.setVisibility(View.INVISIBLE);
+            }
+
             final SensorFusionBosch sensorFusion = board.getModule(SensorFusionBosch.class);
             final CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -567,6 +582,15 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
                 led2.editPattern(Led.Color.BLUE, Led.PatternPreset.SOLID)
                         .commit();
                 led2.play();
+            }
+
+            if (!s2Calibrated) {
+                s2GyroImage.setVisibility(View.VISIBLE);
+                s2GyroStatus.setVisibility(View.VISIBLE);
+                s2MagnetImage.setVisibility(View.VISIBLE);
+                s2MagnetStatus.setVisibility(View.VISIBLE);
+                s2Calibrate.setVisibility(View.VISIBLE);
+                close.setVisibility(View.INVISIBLE);
             }
 
             final SensorFusionBosch sensorFusion2 = board2.getModule(SensorFusionBosch.class);

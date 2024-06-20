@@ -237,8 +237,8 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                 s1PoseAngles = quaternionToEulerAngles(s1Pose, "zyx");
                 s2PoseAngles = quaternionToEulerAngles(s2Pose, "xyz");
 
-                Log.i("TherapyActivity", "S1 Pose Angles - Z = " + s1PoseAngles[0] + " Y = " + s1PoseAngles[1] + " X = " + s1PoseAngles[2]);
-                Log.i("TherapyActivity", "S2 Pose Angles - X = " + s2PoseAngles[0] + " Y = " + s2PoseAngles[1] + " Z = " + s2PoseAngles[2]);
+                Log.i("TherapyActivity", "S1 Pose Angles - X = " + s1PoseAngles[0] + " Y = " + s1PoseAngles[1] + " Z = " + s1PoseAngles[2]);
+                Log.i("TherapyActivity", "S2 Pose Angles - Z = " + s2PoseAngles[0] + " Y = " + s2PoseAngles[1] + " X = " + s2PoseAngles[2]);
 
 
                 // Start Clock
