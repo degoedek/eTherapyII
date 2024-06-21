@@ -1,6 +1,5 @@
 package com.example.etherapyii;
 
-import com.mbientlab.metawear.data.Quaternion;
 
 class QuaternionNode {
     double q0, q1, q2, q3;

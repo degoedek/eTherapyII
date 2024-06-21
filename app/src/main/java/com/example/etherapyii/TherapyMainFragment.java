@@ -1,5 +1,6 @@
 package com.example.etherapyii;
 
+
 import static java.lang.System.currentTimeMillis;
 
 import android.bluetooth.BluetoothAdapter;
@@ -30,7 +31,6 @@ import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.Route;
 import com.mbientlab.metawear.Subscriber;
 import com.mbientlab.metawear.android.BtleService;
-import com.mbientlab.metawear.data.Quaternion;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.SensorFusionBosch;
 
@@ -594,4 +594,9 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         }
         return rotations;
     }
+
+
+
+
+
 }
