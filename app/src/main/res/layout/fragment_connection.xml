@@ -69,7 +69,7 @@
                     android:layout_height="110dp"
                     android:layout_row="0"
                     android:layout_column="0"
-                    app:srcCompat="@drawable/mmrl" />
+                    app:srcCompat="@drawable/wit_sensor" />
 
                 <ImageView
                     android:id="@+id/s1battery"
@@ -94,7 +94,7 @@
                     android:layout_height="110dp"
                     android:layout_row="0"
                     android:layout_column="2"
-                    app:srcCompat="@drawable/mmrl" />
+                    app:srcCompat="@drawable/wit_sensor" />
 
                 <ImageView
                     android:id="@+id/s2battery"

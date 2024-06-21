@@ -44,6 +44,11 @@ import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.Macro;
 import com.mbientlab.metawear.module.SensorFusionBosch;
 
+import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
+import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.WitBluetoothManager;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import bolts.CancellationTokenSource;
@@ -54,6 +59,8 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
     String therapy;
     BtleService.LocalBinder serviceBinder;
     private MetaWearBoard board, board2;
+    private List<Bwt901ble> bwt901bleList = new ArrayList<>();
+    private boolean destroyed = true;
     boolean s1Connected = false;
     boolean s2Connected = false;
     boolean s1Calibrated = false;
@@ -80,6 +87,7 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
         view = inflater.inflate(R.layout.fragment_connection, container, false);
 
         //Variable Declarations
+        // TODO: Delete next 2 lines
         BluetoothManager bluetoothManager = requireActivity().getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
 
@@ -94,16 +102,23 @@ public class ConnectionFragment extends Fragment implements ServiceConnection {
         therapy = getArguments().getString("therapy");
 
         //Bind the service when the activity is created
+        // TODO: I think this next line should also be deleted
         requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
+
+        try {
+            WitBluetoothManager.requestPermissions(getActivity());
+            // 初始化蓝牙管理器，这里会申请蓝牙权限
+            // Initialize the Bluetooth manager, here will apply for Bluetooth permissions
+            WitBluetoothManager.initInstance(getActivity());
+        }catch (Exception e){
+            Log.e("", Objects.requireNonNull(e.getMessage()));
+            e.printStackTrace();
+        }
 
         //onClickListeners
         connect.setOnClickListener(view2 -> {
-            //Bind the service when the activity is created
-            requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
-
             Thread connectThread = new Thread(() -> {
                 Log.i("ConnectionPage", "Connect thread started");
-                requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), ConnectionFragment.this, Context.BIND_AUTO_CREATE);
 
                 if (!s1Connected) {
                     connectBoard();

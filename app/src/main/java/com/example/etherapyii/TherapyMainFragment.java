@@ -34,6 +34,16 @@ import com.mbientlab.metawear.android.BtleService;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.SensorFusionBosch;
 
+import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
+import com.wit.witsdk.modular.sensor.example.ble5.interfaces.IBwt901bleRecordObserver;
+import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.BluetoothBLE;
+import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.BluetoothSPP;
+import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.WitBluetoothManager;
+import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.exceptions.BluetoothBLEException;
+import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.interfaces.IBluetoothFoundObserver;
+import com.wit.witsdk.modular.sensor.device.exceptions.OpenDeviceException;
+import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
+
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
