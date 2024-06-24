@@ -374,6 +374,54 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
 
     }
 
+    //witmotion sensor fusion
+
+    private void sensorFusion(Bwt901ble bwt901ble, int sensorNum){
+        switch (intent) {
+            case "pose":
+                if (posing) {
+                    Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + dataToQuaternion(getDeviceData(bwt901ble)));
+                    if (sensorNum == 1) {
+                        s1CurrentQuat = dataToQuaternion(getDeviceData(bwt901ble));
+                        s1PoseList.insert(s1CurrentQuat);
+                    } else {
+                        s2CurrentQuat = dataToQuaternion(getDeviceData(bwt901ble));
+                        s2PoseList.insert(s2CurrentQuat);
+                    }
+                }
+                break;
+            case "therapy":
+                if (therapyActive) {
+//                                Log.i("TherapyActivity", "Therapy Route Executing");
+                    if (sensorNum == 1) {
+                        Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion(getDeviceData(bwt901ble)));
+                        s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(bwt901ble));
+                        s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+                    } else {
+                        Log.i("TherapyActivity", "Sensor 2: " + dataToQuaternion(getDeviceData(bwt901ble)));
+                        s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(bwt901ble));
+                        s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+                    }
+
+                    // Computing Running Averages
+                    s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
+                    s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
+
+                    // Compute Euler Angles From Averages
+                    s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
+                    s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
+
+                    Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
+                    Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
+                }
+                break;
+        }
+
+
+
+    }
+
+
 
     /**
      * Uses the MAC addresses of the sensors to make sure that they are connected
@@ -470,7 +518,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         // Preventing a divide by zero error
         if (dotProduct > .999 && dotProduct < 1.001) return 0;
 
-        return (float) (Math.acos(2 * dotProduct * dotProduct - 1) * (180/ 3.14159));
+        return (float) (Math.acos(2 * dotProduct * dotProduct - 1) * (180 / 3.14159));
     }
 
     public Quaternion avgQuaternionArray(Quaternion[] array) {
@@ -539,9 +587,9 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     public double[] threeAxisRotation(double r11, double r12, double r21, double r31, double r32) {
         double[] angles = new double[3];
 
-        angles[0] = Math.atan2(r31, r32) * (180/Math.PI);
-        angles[1] = Math.asin(r21) * (180/Math.PI);
-        angles[2] = Math.atan2(r11, r12) * (180/Math.PI);
+        angles[0] = Math.atan2(r31, r32) * (180 / Math.PI);
+        angles[1] = Math.asin(r21) * (180 / Math.PI);
+        angles[2] = Math.atan2(r11, r12) * (180 / Math.PI);
 
         return angles;
     }
@@ -549,53 +597,53 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     public double[] quaternionToEulerAngles(Quaternion q, String seq) {
         double[] rotations = new double[3];
 
-        switch(seq) {
+        switch (seq) {
             case "zyx":
-                rotations = threeAxisRotation( 2*(q.x()*q.y() + q.w()*q.z()),
-                        q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z(),
-                        -2*(q.x()*q.z() - q.w()*q.y()),
-                        2*(q.y()*q.z() + q.w()*q.x()),
-                        q.w()*q.w() - q.x()*q.x() - q.y()*q.y() + q.z()*q.z());
+                rotations = threeAxisRotation(2 * (q.x() * q.y() + q.w() * q.z()),
+                        q.w() * q.w() + q.x() * q.x() - q.y() * q.y() - q.z() * q.z(),
+                        -2 * (q.x() * q.z() - q.w() * q.y()),
+                        2 * (q.y() * q.z() + q.w() * q.x()),
+                        q.w() * q.w() - q.x() * q.x() - q.y() * q.y() + q.z() * q.z());
                 break;
 
             case "zxy":
-                rotations = threeAxisRotation( -2*(q.x()*q.y() - q.w()*q.z()),
-                        q.w()*q.w() - q.x()*q.x() + q.y()*q.y() - q.z()*q.z(),
-                        2*(q.y()*q.z() + q.w()*q.x()),
-                        -2*(q.x()*q.z() - q.w()*q.y()),
-                        q.w()*q.w() - q.x()*q.x() - q.y()*q.y() + q.z()*q.z());
+                rotations = threeAxisRotation(-2 * (q.x() * q.y() - q.w() * q.z()),
+                        q.w() * q.w() - q.x() * q.x() + q.y() * q.y() - q.z() * q.z(),
+                        2 * (q.y() * q.z() + q.w() * q.x()),
+                        -2 * (q.x() * q.z() - q.w() * q.y()),
+                        q.w() * q.w() - q.x() * q.x() - q.y() * q.y() + q.z() * q.z());
                 break;
 
             case "yxz":
-                rotations = threeAxisRotation( 2*(q.x()*q.z() + q.w()*q.y()),
-                        q.w()*q.w() - q.x()*q.x() - q.y()*q.y() + q.z()*q.z(),
-                        -2*(q.y()*q.z() - q.w()*q.x()),
-                        2*(q.x()*q.y() + q.w()*q.z()),
-                        q.w()*q.w() - q.x()*q.x() + q.y()*q.y() - q.z()*q.z());
+                rotations = threeAxisRotation(2 * (q.x() * q.z() + q.w() * q.y()),
+                        q.w() * q.w() - q.x() * q.x() - q.y() * q.y() + q.z() * q.z(),
+                        -2 * (q.y() * q.z() - q.w() * q.x()),
+                        2 * (q.x() * q.y() + q.w() * q.z()),
+                        q.w() * q.w() - q.x() * q.x() + q.y() * q.y() - q.z() * q.z());
                 break;
 
             case "yzx":
-                rotations = threeAxisRotation( -2*(q.x()*q.z() - q.w()*q.y()),
-                        q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z(),
-                        2*(q.x()*q.y() + q.w()*q.z()),
-                        -2*(q.y()*q.z() - q.w()*q.x()),
-                        q.w()*q.w() - q.x()*q.x() + q.y()*q.y() - q.z()*q.z());
+                rotations = threeAxisRotation(-2 * (q.x() * q.z() - q.w() * q.y()),
+                        q.w() * q.w() + q.x() * q.x() - q.y() * q.y() - q.z() * q.z(),
+                        2 * (q.x() * q.y() + q.w() * q.z()),
+                        -2 * (q.y() * q.z() - q.w() * q.x()),
+                        q.w() * q.w() - q.x() * q.x() + q.y() * q.y() - q.z() * q.z());
                 break;
 
             case "xyz":
-                rotations = threeAxisRotation( -2*(q.y()*q.z() - q.w()*q.x()),
-                        q.w()*q.w() - q.x()*q.x() - q.y()*q.y() + q.z()*q.z(),
-                        2*(q.x()*q.z() + q.w()*q.y()),
-                        -2*(q.x()*q.y() - q.w()*q.z()),
-                        q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z());
+                rotations = threeAxisRotation(-2 * (q.y() * q.z() - q.w() * q.x()),
+                        q.w() * q.w() - q.x() * q.x() - q.y() * q.y() + q.z() * q.z(),
+                        2 * (q.x() * q.z() + q.w() * q.y()),
+                        -2 * (q.x() * q.y() - q.w() * q.z()),
+                        q.w() * q.w() + q.x() * q.x() - q.y() * q.y() - q.z() * q.z());
                 break;
 
             case "xzy":
-                rotations = threeAxisRotation( 2*(q.y()*q.z() + q.w()*q.x()),
-                        q.w()*q.w() - q.x()*q.x() + q.y()*q.y() - q.z()*q.z(),
-                        -2*(q.x()*q.y() - q.w()*q.z()),
-                        2*(q.x()*q.z() + q.w()*q.y()),
-                        q.w()*q.w() + q.x()*q.x() - q.y()*q.y() - q.z()*q.z());
+                rotations = threeAxisRotation(2 * (q.y() * q.z() + q.w() * q.x()),
+                        q.w() * q.w() - q.x() * q.x() + q.y() * q.y() - q.z() * q.z(),
+                        -2 * (q.x() * q.y() - q.w() * q.z()),
+                        2 * (q.x() * q.z() + q.w() * q.y()),
+                        q.w() * q.w() + q.x() * q.x() - q.y() * q.y() - q.z() * q.z());
                 break;
 
             default:
@@ -606,7 +654,46 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     }
 
 
+    //funciton to gather data from the wit motion sensor
+
+    private float[] getDeviceData(Bwt901ble bwt901ble) {
+
+        float w, i, j, k, x, y, z;
+
+        w = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.Q0));
+        i = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.Q1));
+        j = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.Q2));
+        k = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.Q3));
+
+        x = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.AngleX));
+        y = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.AngleY));
+        z = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.AngleZ));
+
+        float[] data = {w, i, j, k, x, y, z};
+        return data;
+    }
+
+
+    //funciton to get the data in the type of Quaternion
+    private Quaternion dataToQuaternion(float[] data){
+        return new Quaternion(data[0], data[1], data[2], data[3]);
+    }
+
+    //function to get the data in a rotation array
+    private float[] dataToEuler(float[] data){
+       float[] rotations = new float[3];
+       rotations[0] = data[4];
+       rotations[1] = data[5];
+       rotations[2]= data[4];
+       return rotations;
+    }
 
 
 
 }
+
+
+
+
+
+
