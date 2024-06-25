@@ -79,6 +79,8 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
     TextView sensorConnectionTV1;
     TextView sensorConnectionTV2;
     Button next;
+    Button s1CalibrateBtn;
+    Button s2CalibrateBtn;
     View view;
     ObjectAnimator imageRotator;
     AnimatorSet animatorSet;
@@ -105,6 +107,8 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
         sensorConnectionTV1 = view.findViewById(R.id.SensorConnection1);
         sensorConnectionTV2 = view.findViewById(R.id.SensorConnection2);
         next = view.findViewById(R.id.next_btn);
+        s1CalibrateBtn = view.findViewById(R.id.s1Calibrate);
+        s2CalibrateBtn = view.findViewById(R.id.s2Calibrate);
 
         // Getting Metric From Therapy Description
         assert getArguments() != null;
@@ -201,15 +205,17 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
 
         Log.i("ConnectionFragment", "bwt901ble list size: " + bwt901bleList.size());
 
+        // Sensor Specific Changes
         if (bwt901bleList.size() == 1) {
             viewModel.setSensor1(bwt901ble);
             sensorConnectionTV1.setText("Connected");
             sensorConnectionTV1.setBackgroundColor(connectionColor);
-
+            s1CalibrateBtn.setVisibility(View.VISIBLE);
         } else {
             viewModel.setSensor2(bwt901ble);
             sensorConnectionTV2.setText("Connected");
             sensorConnectionTV2.setBackgroundColor(connectionColor);
+            s2CalibrateBtn.setVisibility(View.VISIBLE);
         }
 
     }
