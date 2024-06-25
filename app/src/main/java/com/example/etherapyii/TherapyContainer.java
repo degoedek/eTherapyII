@@ -7,8 +7,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 
 public class TherapyContainer extends AppCompatActivity {
+    private SharedViewModel viewModel;
+    Bwt901ble sensor1;
+    Bwt901ble sensor2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +26,12 @@ public class TherapyContainer extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        viewModel = new ViewModelProvider(this).get(SharedViewModel.class);
+
+        // Set some initial data
+        viewModel.setSensor1(sensor1);
+        viewModel.setSensor2(sensor2);
 
         // Set initial fragment
         if (savedInstanceState == null) {
