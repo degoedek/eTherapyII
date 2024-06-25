@@ -14,6 +14,7 @@ import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.LiveData;
 
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -374,52 +375,6 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
 
     }
 
-    //witmotion sensor fusion
-
-    private void sensorFusion(Bwt901ble bwt901ble, int sensorNum){
-        switch (intent) {
-            case "pose":
-                if (posing) {
-                    Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + dataToQuaternion(getDeviceData(bwt901ble)));
-                    if (sensorNum == 1) {
-                        s1CurrentQuat = dataToQuaternion(getDeviceData(bwt901ble));
-                        s1PoseList.insert(s1CurrentQuat);
-                    } else {
-                        s2CurrentQuat = dataToQuaternion(getDeviceData(bwt901ble));
-                        s2PoseList.insert(s2CurrentQuat);
-                    }
-                }
-                break;
-            case "therapy":
-                if (therapyActive) {
-//                                Log.i("TherapyActivity", "Therapy Route Executing");
-                    if (sensorNum == 1) {
-                        Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion(getDeviceData(bwt901ble)));
-                        s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(bwt901ble));
-                        s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
-                    } else {
-                        Log.i("TherapyActivity", "Sensor 2: " + dataToQuaternion(getDeviceData(bwt901ble)));
-                        s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(bwt901ble));
-                        s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
-                    }
-
-                    // Computing Running Averages
-                    s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
-                    s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
-
-                    // Compute Euler Angles From Averages
-                    s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
-                    s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
-
-                    Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
-                    Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
-                }
-                break;
-        }
-
-
-
-    }
 
 
 
@@ -654,40 +609,50 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     }
 
 
-    //funciton to gather data from the wit motion sensor
+    //function to gather data from the wit motion sensors
+    //returns the data in the type of a float array where the first
+    // four values are the first quaternion and the second four are
+    //the second quaternion from the sensors
+    float w1, i1, j1, k1, w2, i2, j2, k2;
+    private float[] getDeviceData(SharedViewModel viewModel) {
 
-    private float[] getDeviceData(Bwt901ble bwt901ble) {
 
-        float w, i, j, k, x, y, z;
 
-        w = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.Q0));
-        i = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.Q1));
-        j = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.Q2));
-        k = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.Q3));
+        viewModel.getSensor1().observe(getViewLifecycleOwner(), sensor1-> {
+            if(sensor1!=null){
+                w1 = Float.parseFloat(sensor1.getDeviceData(WitSensorKey.Q0));
+                i1 = Float.parseFloat(sensor1.getDeviceData(WitSensorKey.Q1));
+                j1 = Float.parseFloat(sensor1.getDeviceData(WitSensorKey.Q2));
+                k1 = Float.parseFloat(sensor1.getDeviceData(WitSensorKey.Q3));
+            }
+        });
 
-        x = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.AngleX));
-        y = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.AngleY));
-        z = Float.parseFloat(bwt901ble.getDeviceData(WitSensorKey.AngleZ));
 
-        float[] data = {w, i, j, k, x, y, z};
+        viewModel.getSensor2().observe(getViewLifecycleOwner(), sensor2-> {
+            if(sensor2!=null){
+                w2 = Float.parseFloat(sensor2.getDeviceData(WitSensorKey.Q0));
+                i2 = Float.parseFloat(sensor2.getDeviceData(WitSensorKey.Q1));
+                j2 = Float.parseFloat(sensor2.getDeviceData(WitSensorKey.Q2));
+                k2 = Float.parseFloat(sensor2.getDeviceData(WitSensorKey.Q3));
+            }
+        });
+
+
+
+        float[] data = {w1, i1, j1, k1,w2, i2, j2, k2};
         return data;
     }
 
 
-    //funciton to get the data in the type of Quaternion
-    private Quaternion dataToQuaternion(float[] data){
+    //funciton to get the data in the type of Quaternion for the first sensor
+    private Quaternion dataToQuaternion1(float[] data){
         return new Quaternion(data[0], data[1], data[2], data[3]);
     }
 
-    //function to get the data in a rotation array
-    private float[] dataToEuler(float[] data){
-       float[] rotations = new float[3];
-       rotations[0] = data[4];
-       rotations[1] = data[5];
-       rotations[2]= data[4];
-       return rotations;
+    //function to get the data in the type of Quaternion for the second sensor
+    private Quaternion dataToQuaternion2(float[] data){
+        return new Quaternion(data[4], data[5], data[6], data[7]);
     }
-
 
 
 }
