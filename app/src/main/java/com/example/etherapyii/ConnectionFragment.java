@@ -321,192 +321,115 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
     }
 
     public void s2CalibrationInflater() {
+        // TODO: Add a retry calibration
         //Variable Declarations:
         AlertDialog s2CalibrationScreen;
         Button s2Calibrate = view.findViewById(R.id.s2Calibrate);
 
-        AlertDialog.Builder builder1 = new AlertDialog.Builder(requireActivity());
-        builder1.setCancelable(false);
-        View view3 = getLayoutInflater().inflate(R.layout.popup_s2_calibration_screen, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+        builder.setCancelable(false);
+        View view2 = getLayoutInflater().inflate(R.layout.popup_s2_calibration_screen, null);
 
-//        TextView s2AccelStatus = view3.findViewById(R.id.s2AccelStatus);
-//        TextView s2GyroStatus = view3.findViewById(R.id.s2GyroStatus);
-//        TextView s2MagnetStatus = view3.findViewById(R.id.s2MagnetStatus);
-//        TextView sensorConnection2 = view.findViewById(R.id.SensorConnection2);
-//
-//        ImageView s2AccelImage = view3.findViewById(R.id.s2AccelImage);
-//        ImageView s2GyroImage = view3.findViewById(R.id.s2GyroImage);
-//        ImageView s2MagnetImage = view3.findViewById(R.id.s2MagnetImage);
-//
-//        Button close = view3.findViewById(R.id.close);
-//        ImageButton escape = view3.findViewById(R.id.emergencyExit);
-//
-//
-//        builder1.setView(view3);
-//        s2CalibrationScreen = builder1.create();
-//        s2Calibrate.setOnClickListener(view -> {
-//            s2CalibrationScreen.show();
-//            Led led2;
-//            if ((led2 = board2.getModule(Led.class)) != null) {
-//                led2.stop(true);
-//                led2.editPattern(Led.Color.BLUE, Led.PatternPreset.SOLID)
-//                        .commit();
-//                led2.play();
-//            }
-//
-//            if (!s2Calibrated) {
-//                s2GyroImage.setVisibility(View.VISIBLE);
-//                s2GyroStatus.setVisibility(View.VISIBLE);
-//                s2MagnetImage.setVisibility(View.VISIBLE);
-//                s2MagnetStatus.setVisibility(View.VISIBLE);
-//                s2Calibrate.setVisibility(View.VISIBLE);
-//                close.setVisibility(View.INVISIBLE);
-//            }
-//
-//            final SensorFusionBosch sensorFusion2 = board2.getModule(SensorFusionBosch.class);
-//            final CancellationTokenSource cts2 = new CancellationTokenSource();
-//
-//            // use ndof mode with +/-16g acc range and 2000dps gyro range
-//            sensorFusion2.configure()
-//                    .mode(SensorFusionBosch.Mode.NDOF)
-//                    .accRange(SensorFusionBosch.AccRange.AR_16G)
-//                    .gyroRange(SensorFusionBosch.GyroRange.GR_2000DPS)
-//                    .commit();
-//
-//            sensorFusion2.calibrate(cts2.getToken(), state -> {
-//                String calibrationState2 = state.toString();
-//
-//                requireActivity().runOnUiThread(() -> {
-//                    int nextStateLoc = 34;          //This means the 34th char of calibrationState is the first letter of the accelerometer state
-//                    //HOW TO CALIBRATE: GYRO - LAY STILL ON TABLE   ACCEL - TURN 45 DEGREES ON 1 AXIS REPEATEDLY   MAGNET - CREATE ONE MOTION TO DO REPEATEDLY
-//                    //Lengths: H = 13, U = 10, M = 15, L = 12
-//                    //More lengths: Accelerometer first letter = 35, gyroscope is an additional 13 chars after accelState, magnetometer is an additional 16 or 17 chars after gyroState
-//                    char accelLetter = calibrationState2.charAt(nextStateLoc);
-////                System.out.println();
-////                System.out.println(accelLetter + " Accelletter!!!!!!!!!!!!!");
-//                    switch (accelLetter) {
-//                        case 'H':
-//                            s2AccelStatus.setText("Accelerometer: High Accuracy");
-//                            s2AccelImage.setImageResource(R.drawable.connection_status_high_accuracy);
-//                            nextStateLoc += 13 + 13;
-//                            break;
-//                        case 'M':
-//                            s2AccelStatus.setText("Accelerometer: Medium Accuracy");
-//                            s2AccelImage.setImageResource(R.drawable.connection_status_medium_accuracy);
-//                            nextStateLoc += 15 + 13;
-//                            break;
-//                        case 'L':
-//                            s2AccelStatus.setText("Accelerometer: Low Accuracy");
-//                            s2AccelImage.setImageResource(R.drawable.connection_status_low_accuracy);
-//                            nextStateLoc += 12 + 13;
-//                            break;
-//                        case 'U':
-//                            s2AccelStatus.setText("Accelerometer: Unreliable");
-//                            s2AccelImage.setImageResource(R.drawable.connection_status_unreliable);
-//                            nextStateLoc += 10 + 13;
-//                            break;
-//                    }
-//                    char gyroLetter = calibrationState2.charAt(nextStateLoc);
-////                System.out.println(gyroLetter + " Gyroletter!!!!!!!!!!!!!");
-//                    switch (gyroLetter) {
-//                        case 'H':
-//                            s2GyroStatus.setText("Gyroscope: High Accuracy");
-//                            s2GyroImage.setImageResource(R.drawable.connection_status_high_accuracy);
-//                            nextStateLoc += 13 + 16;
-//                            break;
-//                        case 'M':
-//                            s2GyroStatus.setText("Gyroscope: Medium Accuracy");
-//                            s2GyroImage.setImageResource(R.drawable.connection_status_medium_accuracy);
-//                            nextStateLoc += 15 + 16;
-//                            break;
-//                        case 'L':
-//                            s2GyroStatus.setText("Gyroscope: Low Accuracy");
-//                            s2GyroImage.setImageResource(R.drawable.connection_status_low_accuracy);
-//                            nextStateLoc += 12 + 16;
-//                            break;
-//                        case 'U':
-//                            s2GyroStatus.setText("Gyroscope: Unreliable");
-//                            s2GyroImage.setImageResource(R.drawable.connection_status_unreliable);
-//                            nextStateLoc += 10 + 16;
-//                            break;
-//                    }
-//                    char magnetLetter = calibrationState2.charAt(nextStateLoc);
-////                System.out.println(magnetLetter + " Magnetletter!!!!!!!!!!!!!");
-//                    switch (magnetLetter) {
-//                        case 'H':
-//                            s2MagnetStatus.setText("Magnetometer: High Accuracy");
-//                            s2MagnetImage.setImageResource(R.drawable.connection_status_high_accuracy);
-//                            break;
-//                        case 'M':
-//                            s2MagnetStatus.setText("Magnetometer: Medium Accuracy");
-//                            s2MagnetImage.setImageResource(R.drawable.connection_status_medium_accuracy);
-//                            break;
-//                        case 'L':
-//                            s2MagnetStatus.setText("Magnetometer: Low Accuracy");
-//                            s2MagnetImage.setImageResource(R.drawable.connection_status_low_accuracy);
-//                            break;
-//                        case 'U':
-//                            s2MagnetStatus.setText("Magnetometer: Unreliable");
-//                            s2MagnetImage.setImageResource(R.drawable.connection_status_unreliable);
-//                            break;
-//                    }
-//
-//                    //Condensing calibration UI
-//                    if (accelLetter == 'H' && gyroLetter == 'H' && magnetLetter == 'H') {
-//                        s2AccelImage.setImageResource(R.drawable.connection_status_high_accuracy);
-//                        s2AccelStatus.setText("Sensor Calibrated");
-//                        s2Calibrated = true;
-////                    sendBoards();
-//
-//                        Led led;
-//                        if ((led = board2.getModule(Led.class)) != null) {
-//                            led.stop(true);
-//                        }
-//
-//                        s2GyroImage.setVisibility(View.GONE);
-//                        s2GyroStatus.setVisibility(View.GONE);
-//                        s2MagnetImage.setVisibility(View.GONE);
-//                        s2MagnetStatus.setVisibility(View.GONE);
-//                        s2Calibrate.setVisibility(View.GONE);
-//                        sensorConnection2.setText("Connected Calibrated");
-//                        close.setVisibility(View.VISIBLE);
-//
-//                        if (s1Calibrated && s2Calibrated) next.setVisibility(View.VISIBLE);
-//                    }
-//                });
-//
-//                Log.i("MainActivity", "Sensor 2 - " + calibrationState2);
-//            }).onSuccess(task -> {
-//                // calibration data is reloaded every time mode changes
-//                sensorFusion2.writeCalibrationData(task.getResult());
-//                return null;
-//            });
-//
-//            // stream quaternion values from the board
-//            sensorFusion2.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
-//                    }))
-//                    .continueWith((Continuation<Route, Void>) task -> {
-//                        sensorFusion2.quaternion().start();
-//                        sensorFusion2.start();
-//                        return null;
-//                    });
-//        });
-//
-//        escape.setOnClickListener(view -> {
-//            s2CalibrationScreen.dismiss();
-//            Led led2;
-//            if ((led2 = board2.getModule(Led.class)) != null) {
-//                led2.stop(true);
-//            }
-//        });
-//
-//        close.setOnClickListener(view -> {
-//            s2CalibrationScreen.dismiss();
-//            Led led2;
-//            if ((led2 = board2.getModule(Led.class)) != null) {
-//                led2.stop(true);
-//            }
-//        });
+        TextView sensorConnection2 = view.findViewById(R.id.SensorConnection2);
+        TextView accelInstructions = view2.findViewById(R.id.accelCalibrationInstructions);
+        TextView magnetInstructions = view2.findViewById(R.id.magneticCalibrationInstructions);
+        LinearLayout accelLL = view2.findViewById(R.id.accelerometerCalLinearLayout);
+        LinearLayout magnetLL = view2.findViewById(R.id.magneticCalLinearLayout);
+
+        ImageButton escape = view2.findViewById(R.id.emergencyExit);
+        Button close = view2.findViewById(R.id.close);
+        Button accelCal = view2.findViewById(R.id.accelCalibrationBtn);
+        Button magnetCal = view2.findViewById(R.id.magneticCalibrationBtn);
+
+        builder.setView(view2);
+        s2CalibrationScreen = builder.create();
+        s2Calibrate.setOnClickListener(view -> {
+            s2CalibrationScreen.show();
+        });
+
+        accelCal.setOnClickListener(view -> {
+            // 1. Complete calibration
+            //  a. Make sensor call accelerometer calibration
+            //   i. TODO: Depending on how we differentiate might alter how this is done
+            //  b. Make button do a 3 second count down
+            // 2. Make the accelLL and accelInstructions invisible or *gone*
+            // 3. Make the magnetLL and magnetInstructions visible
+            // 4. Create a boolean variable called accelCalStatus, initialize to false but set true here
+
+            // Step 1a: Accelerometer Calibration
+            accelCalibration(bwt901bleList.get(1));
+
+            // Step 1b: Button Countdown
+            new CountDownTimer(3000, 1000) {
+
+                @Override
+                public void onTick(long l) {
+
+                    accelCal.setText("Calibrating...\n" + (l / 1000 + 1));
+                }
+
+                @Override
+                public void onFinish() {
+                    accelCal.setText("Accelerometer Calibration");
+
+                    // Step 2: Hiding UI Elements
+                    accelLL.setVisibility(View.GONE);
+                    accelInstructions.setVisibility(View.GONE);
+
+                    // Step 3: Display UI Elements
+                    magnetLL.setVisibility(View.VISIBLE);
+                    magnetInstructions.setVisibility(View.VISIBLE);
+                }
+            }.start();
+        });
+
+        magnetCal.setOnClickListener(view -> {
+            // TODO:
+            // 1. Complete calibration
+            //  a. Make button text say "Stop Calibrating"
+            //  b. Make sensors call the magnetic field calibration
+            //   i. TODO: Depending on how we differentiate might alter how this is done
+            // 2. Make the magnetLL invisible or *gone*
+            // 3. Change the magnetInstructions to say "Sensor Successfully Calibrated"
+            // 4. Make the close button visible
+
+            // First Press
+            if (!magnetCalibrating) {
+                magnetCalibrating = true;
+
+                // Step 1a: Button Text
+                magnetCal.setText("Stop Calibrating");
+
+                // Step 1b: Magnetic Calibration
+                magneticCalibrationStart(bwt901bleList.get(1));
+            }
+            // Second Press
+            else {
+                magnetCalibrating = false;
+                magneticCalibrationEnd(bwt901bleList.get(1));
+
+                // Step 2: Hiding UI Elements
+                magnetLL.setVisibility(View.GONE);
+
+                // Step 3: Alter magnetInstructions Text
+                magnetInstructions.setText("Sensor Successfully Calibrated");
+                magnetInstructions.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 35); // TODO: Test this size since I don't really know how this setTextSize works
+
+                // Step 4: Make UI Elements Visible
+                close.setVisibility(View.VISIBLE);
+            }
+
+        });
+
+        escape.setOnClickListener(view -> {
+            s2CalibrationScreen.dismiss();
+        });
+
+        close.setOnClickListener(view -> {
+            s2CalibrationScreen.dismiss();
+            sensorConnection2.setText("Connected\nCalibrated");
+        });
+
     }
 
     private void accelCalibration(Bwt901ble sensor) {
