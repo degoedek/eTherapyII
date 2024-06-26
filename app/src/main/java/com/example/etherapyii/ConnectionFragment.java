@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.nfc.Tag;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -22,8 +23,10 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,18 +37,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mbientlab.metawear.DeviceInformation;
-import com.mbientlab.metawear.MetaWearBoard;
-import com.mbientlab.metawear.Route;
-import com.mbientlab.metawear.Subscriber;
-import com.mbientlab.metawear.android.BtleService;
-import com.mbientlab.metawear.data.Quaternion;
-import com.mbientlab.metawear.module.Debug;
-import com.mbientlab.metawear.module.Haptic;
-import com.mbientlab.metawear.module.Led;
-import com.mbientlab.metawear.module.Macro;
-import com.mbientlab.metawear.module.SensorFusionBosch;
-
 import com.wit.witsdk.modular.sensor.device.exceptions.OpenDeviceException;
 import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 import com.wit.witsdk.modular.sensor.example.ble5.interfaces.IBwt901bleRecordObserver;
@@ -55,27 +46,15 @@ import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.WitBlue
 import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.exceptions.BluetoothBLEException;
 import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.interfaces.IBluetoothFoundObserver;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import bolts.CancellationTokenSource;
-import bolts.Continuation;
-import bolts.Task;
-
 public class ConnectionFragment extends Fragment implements IBluetoothFoundObserver, IBwt901bleRecordObserver{
     String therapy;
-    BtleService.LocalBinder serviceBinder;
-    private MetaWearBoard board, board2;
     private List<Bwt901ble> bwt901bleList = new ArrayList<>();
     private boolean destroyed = true;
     private SharedViewModel viewModel;
-    boolean s1Connected = false;
-    boolean s2Connected = false;
-    boolean s1Calibrated = false;
-    boolean s2Calibrated = false;
     int connectionColor = Color.parseColor("#FF26FF00");
     TextView sensorConnectionTV1;
     TextView sensorConnectionTV2;
@@ -83,11 +62,8 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
     Button s1CalibrateBtn;
     Button s2CalibrateBtn;
     View view;
-    ObjectAnimator imageRotator;
-    AnimatorSet animatorSet;
-    int s1QuatListIndex = 0;
-    int s2QuatListIndex = 0;
-    Route s1Route, s2Route;
+    Boolean magnetCalibrating = false;
+    private final String TAG = "ConnectionFragment";
 
 
     @Override
@@ -103,7 +79,7 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
 
         //Variable Declarations
         //Buttons
-        Button reset = view.findViewById(R.id.resetButton);
+//        Button reset = view.findViewById(R.id.resetButton);
         Button connect = view.findViewById(R.id.connect);
         sensorConnectionTV1 = view.findViewById(R.id.SensorConnection1);
         sensorConnectionTV2 = view.findViewById(R.id.SensorConnection2);
@@ -142,27 +118,32 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
             transaction.commit();
         });
 
+        s1CalibrationInflater();
+        s2CalibrationInflater();
+
         // Inflate the layout for this fragment
         return view;
     }
 
-    public void startDiscovery() {
-        // Turn off all device
+    public void clearBluetooth() {
+        // Turn off all devices
         for (int i = 0; i < bwt901bleList.size(); i++) {
             Bwt901ble bwt901ble = bwt901bleList.get(i);
-            bwt901ble.removeRecordObserver(this); // This might be broken
+            bwt901ble.removeRecordObserver(this);
             bwt901ble.close();
         }
 
         // Erase all devices
         bwt901bleList.clear();
+    }
 
+    public void startDiscovery() {
         // Start searching for bluetooth
         try {
             // get bluetooth manager
             WitBluetoothManager bluetoothManager = WitBluetoothManager.getInstance();
             // Monitor communication signals
-            bluetoothManager.registerObserver(this); // This might be broken
+            bluetoothManager.registerObserver(this);
 
             // start search
             bluetoothManager.startDiscovery();
@@ -227,9 +208,8 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
 
     }
 
-
-
     public void s1CalibrationInflater() {
+        // TODO: Add a retry calibration
         //Variable Declarations:
         AlertDialog s1CalibrationScreen;
         Button s1Calibrate = view.findViewById(R.id.s1Calibrate);
@@ -256,14 +236,39 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
         });
 
         accelCal.setOnClickListener(view -> {
-            // TODO:
             // 1. Complete calibration
-            //  a. Make button do a 3 second count down
-            //  b. Make sensor call accelerometer calibration
+            //  a. Make sensor call accelerometer calibration
             //   i. TODO: Depending on how we differentiate might alter how this is done
+            //  b. Make button do a 3 second count down
             // 2. Make the accelLL and accelInstructions invisible or *gone*
             // 3. Make the magnetLL and magnetInstructions visible
             // 4. Create a boolean variable called accelCalStatus, initialize to false but set true here
+
+            // Step 1a: Accelerometer Calibration
+            accelCalibration(bwt901bleList.get(0));
+
+            // Step 1b: Button Countdown
+            new CountDownTimer(3000, 1000) {
+
+                @Override
+                public void onTick(long l) {
+
+                    accelCal.setText("Calibrating...\n" + (l / 1000 + 1));
+                }
+
+                @Override
+                public void onFinish() {
+                    accelCal.setText("Accelerometer Calibration");
+
+                    // Step 2: Hiding UI Elements
+                    accelLL.setVisibility(View.GONE);
+                    accelInstructions.setVisibility(View.GONE);
+
+                    // Step 3: Display UI Elements
+                    magnetLL.setVisibility(View.VISIBLE);
+                    magnetInstructions.setVisibility(View.VISIBLE);
+                }
+            }.start();
         });
 
         magnetCal.setOnClickListener(view -> {
@@ -275,6 +280,33 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
             // 2. Make the magnetLL invisible or *gone*
             // 3. Change the magnetInstructions to say "Sensor Successfully Calibrated"
             // 4. Make the close button visible
+
+            // First Press
+            if (!magnetCalibrating) {
+                magnetCalibrating = true;
+
+                // Step 1a: Button Text
+                magnetCal.setText("Stop Calibrating");
+
+                // Step 1b: Magnetic Calibration
+                magneticCalibrationStart(bwt901bleList.get(0));
+            }
+            // Second Press
+            else {
+                magnetCalibrating = false;
+                magneticCalibrationEnd(bwt901bleList.get(0));
+
+                // Step 2: Hiding UI Elements
+                magnetLL.setVisibility(View.GONE);
+
+                // Step 3: Alter magnetInstructions Text
+                magnetInstructions.setText("Sensor Successfully Calibrated");
+                magnetInstructions.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 35); // TODO: Test this size since I don't really know how this setTextSize works
+
+                // Step 4: Make UI Elements Visible
+                close.setVisibility(View.VISIBLE);
+            }
+
         });
 
         escape.setOnClickListener(view -> {
