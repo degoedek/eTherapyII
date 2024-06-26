@@ -112,8 +112,14 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
         });
 
         next.setOnClickListener(view -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("therapy", therapy);
+
+            SensorPlacementFragment sensorPlacementFragment = new SensorPlacementFragment();
+            sensorPlacementFragment.setArguments(bundle);
+
             FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-            transaction.replace(R.id.therapyContainer, new SensorPlacementFragment());
+            transaction.replace(R.id.therapyContainer, sensorPlacementFragment);
             transaction.addToBackStack(null);
             transaction.commit();
         });

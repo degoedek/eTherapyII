@@ -98,7 +98,12 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+    }
 
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        view = inflater.inflate(R.layout.fragment_therapy_main, container, false);
 
         viewModel.getSensor1().observe(getViewLifecycleOwner(), new Observer<Bwt901ble>(){
             public void onChanged(@Nullable final Bwt901ble newSensor) {
@@ -118,12 +123,6 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
                 Log.d("SensorFragment", "Sensor1 received: " + sensor2);
             }
         });
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_therapy_main, container, false);
 
         // Variable Declaration
         TextView titleTV = view.findViewById(R.id.titleTV);
