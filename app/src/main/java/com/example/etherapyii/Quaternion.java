@@ -24,6 +24,10 @@ public class Quaternion {
         return z;
     }
 
+    public String toString(){
+        return "Q0: "+ w+" Q1: "+x+" Q2: "+y+" Q3: "+z;
+    }
+
 
 
 }

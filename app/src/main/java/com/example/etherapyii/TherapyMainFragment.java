@@ -12,9 +12,12 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -28,12 +31,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.mbientlab.metawear.MetaWearBoard;
-import com.mbientlab.metawear.Route;
-import com.mbientlab.metawear.Subscriber;
-import com.mbientlab.metawear.android.BtleService;
-import com.mbientlab.metawear.module.Led;
-import com.mbientlab.metawear.module.SensorFusionBosch;
+//import com.mbientlab.metawear.MetaWearBoard;
+//import com.mbientlab.metawear.Route;
+//import com.mbientlab.metawear.Subscriber;
+//import com.mbientlab.metawear.android.BtleService;
+//import com.mbientlab.metawear.module.Led;
+//import com.mbientlab.metawear.module.SensorFusionBosch;
 
 import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 import com.wit.witsdk.modular.sensor.example.ble5.interfaces.IBwt901bleRecordObserver;
@@ -53,12 +56,13 @@ import bolts.Continuation;
 
 
 public class TherapyMainFragment extends Fragment implements ServiceConnection {
-    private BtleService.LocalBinder serviceBinder;
+    //private BtleService.LocalBinder serviceBinder;
     private boolean isClockRunning = false, started = false, repStarted = false;
+    SharedViewModel viewModel;
     private String time;
     private Handler handler;
     private long startTime;
-    private MetaWearBoard board, board2;
+    //private MetaWearBoard board, board2;
     private CountDownTimer repCountdown;
     private Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
     private Boolean posing = false, therapyActive = false;
@@ -71,8 +75,8 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     private Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     private int s1Index = 0, s2Index = 0;
     private float currentDistance;
-    private Thread S1PoseThread = new Thread(() -> sensorFusion(board, 1));
-    private Thread S2PoseThread = new Thread(() -> sensorFusion(board2, 2));
+    private Thread S1PoseThread = new Thread(() -> sensorFusion(viewModel, 1));
+    private Thread S2PoseThread = new Thread(() -> sensorFusion(viewModel, 2));
     private String intent = "pose";
     private TextView distanceTV, HoldTV;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
@@ -85,11 +89,35 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     private double[] s1Angles = new double[3];
     private double[] s2Angles = new double[3];
     private float initialX, initialY;
-    private Route s1Route, s2Route;
+    //private Route s1Route, s2Route;
+    private Bwt901ble sensor1, sensor2;
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+
+
+        viewModel.getSensor1().observe(getViewLifecycleOwner(), new Observer<Bwt901ble>(){
+            public void onChanged(@Nullable final Bwt901ble newSensor) {
+                // Update the UI with the new sensor data
+                sensor1 = newSensor;
+                // Example: Log the sensor data
+                Log.d("SensorFragment", "Sensor1 received: " + sensor1);
+            }
+        });
+
+        viewModel.getSensor2().observe(getViewLifecycleOwner(), new Observer<Bwt901ble>(){
+            // Update the UI with the new sensor data
+            public void onChanged(@Nullable final Bwt901ble newSensor) {
+                // Update the UI with the new sensor data
+                sensor2 = newSensor;
+                // Example: Log the sensor data
+                Log.d("SensorFragment", "Sensor1 received: " + sensor2);
+            }
+        });
     }
 
     @Override
@@ -143,25 +171,25 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         timeTV.setText("0:00");
 
         // Create Bluetooth Service Binding
-        requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
+      //  requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
 
         handler = new Handler(Looper.getMainLooper());
 
         // Button Listeners
         beginButton.setOnClickListener(view2 -> {
             if (!started) {
-                Led led;
-                if ((led = board.getModule(Led.class)) != null) {
-                    led.editPattern(Led.Color.RED, Led.PatternPreset.SOLID)
-                            .commit();
-                    led.play();
-                }
-
-                if ((led = board2.getModule(Led.class)) != null) {
-                    led.editPattern(Led.Color.BLUE, Led.PatternPreset.SOLID)
-                            .commit();
-                    led.play();
-                }
+//                Led led;
+//                if ((led = board.getModule(Led.class)) != null) {
+//                    led.editPattern(Led.Color.RED, Led.PatternPreset.SOLID)
+//                            .commit();
+//                    led.play();
+//                }
+//
+//                if ((led = board2.getModule(Led.class)) != null) {
+//                    led.editPattern(Led.Color.BLUE, Led.PatternPreset.SOLID)
+//                            .commit();
+//                    led.play();
+//                }
                 started = true;
                 startCountdown();
             }
@@ -170,8 +198,8 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         stopButton.setOnClickListener(view2 -> {
             isClockRunning = false;
             therapyActive = false;
-            turnOffLEDs();
-            stopSensorFusion("default");
+  //          turnOffLEDs();
+  //          stopSensorFusion("default");
 
             Bundle bundle = new Bundle();
             // TODO: Add bundle extras here when needed
@@ -195,8 +223,8 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     public void onServiceConnected(ComponentName componentName, IBinder service) {
         Log.d("TherapyActivity", "Service Connected");
         //Typecast the binder to the service's LocalBinder class
-        serviceBinder = (BtleService.LocalBinder) service;
-        retrieveBoard();
+     //   serviceBinder = (BtleService.LocalBinder) service;
+    //    retrieveBoard();
     }
 
     @Override
@@ -294,7 +322,7 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
      * Determines the initial position of a sensor
      */
     public void getPose() {
-        if (board != null && board2 != null) {
+        if (sensor1 != null && sensor2 != null) {
             S1PoseThread.start();
             S2PoseThread.start();
         } else {
@@ -302,98 +330,100 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
         }
     }
 
-    private void sensorFusion(MetaWearBoard board, int sensorNum) {
-        HoldTV = view.findViewById(R.id.HoldTV);
+    //Mbient Labs Function
 
-        SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
-//        sf.resetOrientation();
-
-
-        // use ndof mode with +/-16g acc range and 2000dps gyro range
-        sf.configure()
-                .mode(SensorFusionBosch.Mode.NDOF)
-                .accRange(SensorFusionBosch.AccRange.AR_16G)
-                .gyroRange(SensorFusionBosch.GyroRange.GR_2000DPS)
-                .commit();
-
-        // stream quaternion values from the board
-        sf.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
-//            Log.i("MainActivity", "Board: " + sensorNum + " - Quaternion = " + data.value(Quaternion.class));
-                    // Assigning quaternion values to respective variables based on sensor
-                    switch (intent) {
-                        case "pose":
-                            if (posing) {
-                                Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + data.value(Quaternion.class));
-                                if (sensorNum == 1) {
-                                    s1CurrentQuat = data.value(Quaternion.class);
-                                    s1PoseList.insert(s1CurrentQuat);
-                                } else {
-                                    s2CurrentQuat = data.value(Quaternion.class);
-                                    s2PoseList.insert(s2CurrentQuat);
-                                }
-                            }
-                            break;
-                        case "therapy":
-                            if (therapyActive) {
-//                                Log.i("TherapyActivity", "Therapy Route Executing");
-                                if (sensorNum == 1) {
-                                    Log.i("TherapyActivity", "Sensor 1: " + data.value(Quaternion.class));
-                                    s1RunningAverage[s1Index] = data.value(Quaternion.class);
-                                    s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
-                                } else {
-                                    Log.i("TherapyActivity", "Sensor 2: " + data.value(Quaternion.class));
-                                    s2RunningAverage[s2Index] = data.value(Quaternion.class);
-                                    s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
-                                }
-
-                                // Computing Running Averages
-                                s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
-                                s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
-
-                                // Compute Euler Angles From Averages
-                                s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
-                                s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
-
-                                Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
-                                Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
-                            }
-                            break;
-                    }
-
-                }))
-                .continueWith((Continuation<Route, Void>) task -> {
-                    if (sensorNum == 1) {
-                        s1Route = task.getResult();
-                    } else {
-                        s2Route = task.getResult();
-                    }
-//                    sf.resetOrientation();
-                    sf.quaternion().start();
-                    sf.start();
-                    return null;
-                });
-
-    }
-
-
-
-
-    /**
-     * Uses the MAC addresses of the sensors to make sure that they are connected
-     */
-    public void retrieveBoard() {
-        final BluetoothManager btManager = (BluetoothManager) requireActivity().getSystemService(Context.BLUETOOTH_SERVICE);
-        //Has the haptic coin
-        String macAddress1 = "ED:5B:0A:50:14:59";
-        BluetoothDevice sensor = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(macAddress1);
-        String macAddress2 = "FE:C2:4B:10:FB:D5";
-        BluetoothDevice sensor2 = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(macAddress2);
-
-
-        // Create a MetaWear board object for the Bluetooth Device
-        board = serviceBinder.getMetaWearBoard(sensor);
-        board2 = serviceBinder.getMetaWearBoard(sensor2);
-    }
+//    private void sensorFusion(MetaWearBoard board, int sensorNum) {
+//        HoldTV = view.findViewById(R.id.HoldTV);
+//
+//        SensorFusionBosch sf = board.getModule(SensorFusionBosch.class);
+////        sf.resetOrientation();
+//
+//
+//        // use ndof mode with +/-16g acc range and 2000dps gyro range
+//        sf.configure()
+//                .mode(SensorFusionBosch.Mode.NDOF)
+//                .accRange(SensorFusionBosch.AccRange.AR_16G)
+//                .gyroRange(SensorFusionBosch.GyroRange.GR_2000DPS)
+//                .commit();
+//
+//        // stream quaternion values from the board
+//        sf.quaternion().addRouteAsync(source -> source.stream((Subscriber) (data, env) -> {
+////            Log.i("MainActivity", "Board: " + sensorNum + " - Quaternion = " + data.value(Quaternion.class));
+//                    // Assigning quaternion values to respective variables based on sensor
+//                    switch (intent) {
+//                        case "pose":
+//                            if (posing) {
+//                                Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + data.value(Quaternion.class));
+//                                if (sensorNum == 1) {
+//                                    s1CurrentQuat = data.value(Quaternion.class);
+//                                    s1PoseList.insert(s1CurrentQuat);
+//                                } else {
+//                                    s2CurrentQuat = data.value(Quaternion.class);
+//                                    s2PoseList.insert(s2CurrentQuat);
+//                                }
+//                            }
+//                            break;
+//                        case "therapy":
+//                            if (therapyActive) {
+////                                Log.i("TherapyActivity", "Therapy Route Executing");
+//                                if (sensorNum == 1) {
+//                                    Log.i("TherapyActivity", "Sensor 1: " + data.value(Quaternion.class));
+//                                    s1RunningAverage[s1Index] = data.value(Quaternion.class);
+//                                    s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+//                                } else {
+//                                    Log.i("TherapyActivity", "Sensor 2: " + data.value(Quaternion.class));
+//                                    s2RunningAverage[s2Index] = data.value(Quaternion.class);
+//                                    s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+//                                }
+//
+//                                // Computing Running Averages
+//                                s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
+//                                s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
+//
+//                                // Compute Euler Angles From Averages
+//                                s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
+//                                s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
+//
+//                                Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
+//                                Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
+//                            }
+//                            break;
+//                    }
+//
+//                }))
+//                .continueWith((Continuation<Route, Void>) task -> {
+//                    if (sensorNum == 1) {
+//                        s1Route = task.getResult();
+//                    } else {
+//                        s2Route = task.getResult();
+//                    }
+////                    sf.resetOrientation();
+//                    sf.quaternion().start();
+//                    sf.start();
+//                    return null;
+//                });
+//
+//    }
+//
+//
+//
+//
+//    /**
+//     * Uses the MAC addresses of the sensors to make sure that they are connected
+//     */
+//    public void retrieveBoard() {
+//        final BluetoothManager btManager = (BluetoothManager) requireActivity().getSystemService(Context.BLUETOOTH_SERVICE);
+//        //Has the haptic coin
+//        String macAddress1 = "ED:5B:0A:50:14:59";
+//        BluetoothDevice sensor = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(macAddress1);
+//        String macAddress2 = "FE:C2:4B:10:FB:D5";
+//        BluetoothDevice sensor2 = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(macAddress2);
+//
+//
+//        // Create a MetaWear board object for the Bluetooth Device
+//        board = serviceBinder.getMetaWearBoard(sensor);
+//        board2 = serviceBinder.getMetaWearBoard(sensor2);
+//    }
 
 
     private void updateCirclePosition(double[] s1Angles, double[] s2Angles) {
@@ -492,52 +522,54 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
 
         return new Quaternion(wSum / valueCounter, xSum / valueCounter, ySum / valueCounter, zSum / valueCounter);
     }
-
-    public void stopSensorFusion(String intent) {
-        switch (intent) {
-            case "pose":
-                S1PoseThread.interrupt();
-                S2PoseThread.interrupt();
-                break;
-            default:
-                if (board != null) {
-                    Thread stopThread = new Thread(() -> {
-                        final SensorFusionBosch sensorFusion = board.getModule(SensorFusionBosch.class);
-
-                        Log.i("stopSensorFusion", "Sensor 1 should stop sensor fusion");
-                        sensorFusion.stop();
-                        sensorFusion.quaternion().stop();
-                        s1Route.remove();
-                    });
-                    stopThread.start();
-                }
-                if (board2 != null) {
-                    Thread stopThread = new Thread(() -> {
-                        final SensorFusionBosch sensorFusion2 = board2.getModule(SensorFusionBosch.class);
-
-                        Log.i("stopSensorFusion", "Sensor 2 should stop sensor fusion");
-                        sensorFusion2.quaternion().stop();
-                        sensorFusion2.stop();
-                        s2Route.remove();
-                    });
-                    stopThread.start();
-                }
-        }
-    }
+        //Mbient Labs Function
+//    public void stopSensorFusion(String intent) {
+//        switch (intent) {
+//            case "pose":
+//                S1PoseThread.interrupt();
+//                S2PoseThread.interrupt();
+//                break;
+//            default:
+//                if (board != null) {
+//                    Thread stopThread = new Thread(() -> {
+//                        final SensorFusionBosch sensorFusion = board.getModule(SensorFusionBosch.class);
+//
+//                        Log.i("stopSensorFusion", "Sensor 1 should stop sensor fusion");
+//                        sensorFusion.stop();
+//                        sensorFusion.quaternion().stop();
+//                        s1Route.remove();
+//                    });
+//                    stopThread.start();
+//                }
+//                if (board2 != null) {
+//                    Thread stopThread = new Thread(() -> {
+//                        final SensorFusionBosch sensorFusion2 = board2.getModule(SensorFusionBosch.class);
+//
+//                        Log.i("stopSensorFusion", "Sensor 2 should stop sensor fusion");
+//                        sensorFusion2.quaternion().stop();
+//                        sensorFusion2.stop();
+//                        s2Route.remove();
+//                    });
+//                    stopThread.start();
+//                }
+//        }
+//    }
 
     /**
      * Turns off the sensor LEDs
      */
-    public void turnOffLEDs() {
-        //Turn on LEDs
-        Led led, led2;
-        if ((led = board.getModule(Led.class)) != null) {
-            led.stop(true);
-        }
-        if ((led2 = board2.getModule(Led.class)) != null) {
-            led2.stop(true);
-        }
-    }
+    //Mbient Labs Function
+
+//    public void turnOffLEDs() {
+//        //Turn on LEDs
+//        Led led, led2;
+//        if ((led = board.getModule(Led.class)) != null) {
+//            led.stop(true);
+//        }
+//        if ((led2 = board2.getModule(Led.class)) != null) {
+//            led2.stop(true);
+//        }
+//    }
 
     public double[] threeAxisRotation(double r11, double r12, double r21, double r31, double r32) {
         double[] angles = new double[3];
@@ -653,6 +685,52 @@ public class TherapyMainFragment extends Fragment implements ServiceConnection {
     private Quaternion dataToQuaternion2(float[] data){
         return new Quaternion(data[4], data[5], data[6], data[7]);
     }
+
+    //sensor fusion for new witmotion sensors
+    private void sensorFusion(SharedViewModel viewModel, int sensorNum){
+        switch (intent) {
+            case "pose":
+                if (posing) {
+                    if (sensorNum == 1) {
+                        s1CurrentQuat = dataToQuaternion1(getDeviceData(viewModel));
+                        Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s1CurrentQuat);
+
+                        s1PoseList.insert(s1CurrentQuat);
+                    } else {
+                        s2CurrentQuat = dataToQuaternion2(getDeviceData(viewModel));
+                        Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s2CurrentQuat);
+                        s2PoseList.insert(s2CurrentQuat);
+                    }
+                }
+                break;
+            case "therapy":
+                if (therapyActive) {
+//                                Log.i("TherapyActivity", "Therapy Route Executing");
+                    if (sensorNum == 1) {
+                        Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion1(getDeviceData(viewModel)) );
+                        s1RunningAverage[s1Index] = dataToQuaternion1(getDeviceData(viewModel));;
+                        s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+                    } else {
+                        Log.i("TherapyActivity", "Sensor 2: " + dataToQuaternion2(getDeviceData(viewModel)) );
+                        s2RunningAverage[s2Index] = dataToQuaternion2(getDeviceData(viewModel));;
+                        s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+                    }
+
+                    // Computing Running Averages
+                    s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
+                    s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
+
+                    // Compute Euler Angles From Averages
+                    s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
+                    s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
+
+                    Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
+                    Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
+                }
+                break;
+        }
+    }
+
 
 
 }
