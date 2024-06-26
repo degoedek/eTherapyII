@@ -39,7 +39,7 @@
     <LinearLayout
         android:id="@+id/calibrationLinearLayout"
         android:layout_width="match_parent"
-        android:layout_height="600dp"
+        android:layout_height="680dp"
         android:orientation="vertical">
         <LinearLayout
             android:id="@+id/accelerometerCalLinearLayout"
@@ -59,8 +59,8 @@
 
             <ImageView
                 android:id="@+id/accelCalibrationGIF"
-                android:layout_width="100dp"
-                android:layout_height="100dp"/>
+                android:layout_width="200dp"
+                android:layout_height="200dp"/>
 
         </LinearLayout>
 
@@ -70,14 +70,16 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:text="@string/Accel_Calibration_Instructions"/>
+            android:text="@string/Accel_Calibration_Instructions"
+            android:textSize=""/>
 
         <LinearLayout
             android:id="@+id/magneticCalLinearLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_gravity="center">
+            android:layout_gravity="center"
+            android:visibility="invisible">
 
             <Button
                 android:id="@+id/magneticCalibrationBtn"
@@ -90,8 +92,8 @@
 
             <ImageView
                 android:id="@+id/magneticCalibrationGIF"
-                android:layout_width="100dp"
-                android:layout_height="100dp"/>
+                android:layout_width="200dp"
+                android:layout_height="200dp"/>
 
         </LinearLayout>
 
@@ -101,17 +103,19 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:text="@string/Magnetic_Calibration_Instructions"/>
+            android:text="@string/Magnetic_Calibration_Instructions"
+            android:visibility="invisible"/>
 
         <Button
-            android:id="@+id/escapeBtn"
+            android:id="@+id/close"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="Exit"
             android:textSize="30sp"
             android:backgroundTint="@color/orange"
-            android:layout_marginTop="50dp"/>
+            android:layout_marginTop="40dp"
+            android:visibility="invisible"/>
 
     </LinearLayout>
 

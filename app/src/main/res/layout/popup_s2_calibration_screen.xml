@@ -104,7 +104,7 @@
             android:text="@string/Magnetic_Calibration_Instructions"/>
 
         <Button
-            android:id="@+id/escapeBtn"
+            android:id="@+id/close"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
