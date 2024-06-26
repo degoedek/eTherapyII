@@ -93,7 +93,7 @@
                 android:backgroundTint="@color/orange"
                 android:layout_marginLeft="10dp"/>
 
-            <ImageView
+            <pl.droidsonroids.gif.GifImageView
                 android:id="@+id/magneticCalibrationGIF"
                 android:layout_width="200dp"
                 android:layout_height="200dp"
