@@ -442,6 +442,10 @@ public class TherapyMainFragment extends Fragment {
     }
 
     public double[] quaternionToEulerAngles(Quaternion q, String seq) {
+        if (q == null){
+            return null;
+        }
+        
         double[] rotations = new double[3];
 
         switch (seq) {
@@ -505,26 +509,32 @@ public class TherapyMainFragment extends Fragment {
     //returns the data in the type of a float array where the first
     // four values are the first quaternion and the second four are
     //the second quaternion from the sensors
-    float w1, i1, j1, k1;
+    float w, i, j, k;
     private float[] getDeviceData(Bwt901ble sensor) {
 
 
 
         if(sensor!=null){
-            w1 = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q0));
-            i1 = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q1));
-            j1 = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q2));
-            k1 = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q3));
+            if(sensor.getDeviceData(WitSensorKey.Q0) != null) {
+                w = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q0));
+                i = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q1));
+                j = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q2));
+                k = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q3));
+            }else{
+                return null;
+            }
         }
 
-
-        float[] data = {w1, i1, j1, k1,};
+        float[] data = {w, i, j, k};
         return data;
     }
 
 
     //function to get the data in the type of Quaternion for the first sensor
     private Quaternion dataToQuaternion(float[] data){
+        if(data == null){
+            return null;
+        }
         return new Quaternion(data[0], data[1], data[2], data[3]);
     }
 
