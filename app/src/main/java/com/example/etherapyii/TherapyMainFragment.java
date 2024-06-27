@@ -3,25 +3,14 @@ package com.example.etherapyii;
 
 import static java.lang.System.currentTimeMillis;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
 
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,38 +20,21 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-//import com.mbientlab.metawear.MetaWearBoard;
-//import com.mbientlab.metawear.Route;
-//import com.mbientlab.metawear.Subscriber;
-//import com.mbientlab.metawear.android.BtleService;
-//import com.mbientlab.metawear.module.Led;
-//import com.mbientlab.metawear.module.SensorFusionBosch;
 
 import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
-import com.wit.witsdk.modular.sensor.example.ble5.interfaces.IBwt901bleRecordObserver;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.BluetoothBLE;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.BluetoothSPP;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.WitBluetoothManager;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.exceptions.BluetoothBLEException;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.interfaces.IBluetoothFoundObserver;
-import com.wit.witsdk.modular.sensor.device.exceptions.OpenDeviceException;
 import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import bolts.Continuation;
-
 
 public class TherapyMainFragment extends Fragment {
-    //private BtleService.LocalBinder serviceBinder;
     private boolean isClockRunning = false, started = false, repStarted = false;
     SharedViewModel viewModel;
     private String time;
     private Handler handler;
     private long startTime;
-    //private MetaWearBoard board, board2;
     private CountDownTimer repCountdown;
     private Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
     private Boolean posing = false, therapyActive = false;
@@ -89,7 +61,6 @@ public class TherapyMainFragment extends Fragment {
     private double[] s1Angles = new double[3];
     private double[] s2Angles = new double[3];
     private float initialX, initialY;
-    //private Route s1Route, s2Route;
     private Bwt901ble sensor1, sensor2;
     private boolean destroyed = true;
 
@@ -105,23 +76,19 @@ public class TherapyMainFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_therapy_main, container, false);
 
-        viewModel.getSensor1().observe(getViewLifecycleOwner(), new Observer<Bwt901ble>(){
-            public void onChanged(@Nullable final Bwt901ble newSensor) {
-                // Update the UI with the new sensor data
-                sensor1 = newSensor;
-                // Example: Log the sensor data
-                Log.d("SensorFragment", "Sensor1 received: " + sensor1);
-            }
+        viewModel.getSensor1().observe(getViewLifecycleOwner(), newSensor -> {
+            // Update the UI with the new sensor data
+            sensor1 = newSensor;
+            // Example: Log the sensor data
+            Log.d("SensorFragment", "Sensor1 received: " + sensor1);
         });
 
-        viewModel.getSensor2().observe(getViewLifecycleOwner(), new Observer<Bwt901ble>(){
+        // Update the UI with the new sensor data
+        viewModel.getSensor2().observe(getViewLifecycleOwner(), newSensor -> {
             // Update the UI with the new sensor data
-            public void onChanged(@Nullable final Bwt901ble newSensor) {
-                // Update the UI with the new sensor data
-                sensor2 = newSensor;
-                // Example: Log the sensor data
-                Log.d("SensorFragment", "Sensor1 received: " + sensor2);
-            }
+            sensor2 = newSensor;
+            // Example: Log the sensor data
+            Log.d("SensorFragment", "Sensor1 received: " + sensor2);
         });
 
         // Variable Declaration
@@ -169,9 +136,6 @@ public class TherapyMainFragment extends Fragment {
         repsText = repsCompleted + "/" + reps;
         repsTV.setText(repsText);
         timeTV.setText("0:00");
-
-        // Create Bluetooth Service Binding
-      //  requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
 
         handler = new Handler(Looper.getMainLooper());
 
@@ -566,7 +530,6 @@ public class TherapyMainFragment extends Fragment {
                     break;
                 case "therapy":
                     if (therapyActive) {
-//                                Log.i("TherapyActivity", "Therapy Route Executing");
                         if (sensorNum == 1) {
                             Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion(getDeviceData(sensor1)));
                             s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
