@@ -75,8 +75,8 @@ public class TherapyMainFragment extends Fragment {
     private Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     private int s1Index = 0, s2Index = 0;
     private float currentDistance;
-    private Thread S1PoseThread = new Thread(() -> sensorFusion(viewModel, 1));
-    private Thread S2PoseThread = new Thread(() -> sensorFusion(viewModel, 2));
+    private Thread S1PoseThread = new Thread(() -> sensorFusion(1));
+    private Thread S2PoseThread = new Thread(() -> sensorFusion(2));
     private String intent = "pose";
     private TextView distanceTV, HoldTV;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
@@ -187,6 +187,10 @@ public class TherapyMainFragment extends Fragment {
         stopButton.setOnClickListener(view2 -> {
             isClockRunning = false;
             therapyActive = false;
+            destroyed = true;
+            S1PoseThread.interrupt();
+            S2PoseThread.interrupt();
+
 
             Bundle bundle = new Bundle();
             // TODO: Add bundle extras here when needed
@@ -202,11 +206,8 @@ public class TherapyMainFragment extends Fragment {
             transaction.commit();
         });
 
-
-        // Auto refresh data thread
-//        Thread thread = new Thread(this::refreshDataTh);
+        // Allows sensor fusion to run
         destroyed = false;
-//        thread.start();
 
         // Inflate the layout for this fragment
         return view;
@@ -540,7 +541,7 @@ public class TherapyMainFragment extends Fragment {
 
 
     //sensor fusion for new witmotion sensors
-    private void sensorFusion(SharedViewModel viewModel, int sensorNum) {
+    private void sensorFusion(int sensorNum) {
         while (!destroyed) {
             try {
                 Thread.sleep(50);
