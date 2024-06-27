@@ -78,7 +78,7 @@ public class TherapyMainFragment extends Fragment {
     private Thread S1PoseThread = new Thread(() -> sensorFusion(1));
     private Thread S2PoseThread = new Thread(() -> sensorFusion(2));
     private String intent = "pose";
-    private TextView distanceTV, HoldTV;
+    private TextView distanceTV, HoldTV, dataDisplay;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
     private int HOLD_TIME;
     private View view;
@@ -130,6 +130,7 @@ public class TherapyMainFragment extends Fragment {
         TextView timeTV = view.findViewById(R.id.timeTV);
         Button beginButton = view.findViewById(R.id.beginButton);
         Button stopButton = view.findViewById(R.id.btn_stop);
+        dataDisplay = view.findViewById(R.id.dataDisplay);
         circleUserWithNotch = view.findViewById(R.id.circle_user_with_notch);
         circleGoalWithNotch = view.findViewById(R.id.circle_goal_with_notch);
         int[] userCoordinates = new int[2];
@@ -544,24 +545,19 @@ public class TherapyMainFragment extends Fragment {
     private void sensorFusion(int sensorNum) {
         while (!destroyed) {
             try {
-                Thread.sleep(50);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 1");
             switch (intent) {
                 case "pose":
-                    Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 2 - Pose case entered");
                     if (posing) {
-                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 3 - posing variable true");
                         if (sensorNum == 1) {
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 4a");
                             s1CurrentQuat = dataToQuaternion(getDeviceData(sensor1));
                             Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s1CurrentQuat);
 
                             s1PoseList.insert(s1CurrentQuat);
                         } else {
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 4b");
                             s2CurrentQuat = dataToQuaternion(getDeviceData(sensor2));
                             Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s2CurrentQuat);
                             s2PoseList.insert(s2CurrentQuat);
@@ -569,22 +565,15 @@ public class TherapyMainFragment extends Fragment {
                     }
                     break;
                 case "therapy":
-                    Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 5 - Therapy Case entered");
                     if (therapyActive) {
-                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 6 - therapyActive variable true");
 //                                Log.i("TherapyActivity", "Therapy Route Executing");
                         if (sensorNum == 1) {
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7a");
                             Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion(getDeviceData(sensor1)));
                             s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
-                            ;
                             s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
                         } else {
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
                             Log.i("TherapyActivity", "Sensor 2: " + dataToQuaternion(getDeviceData(sensor2)));
                             s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
-                            ;
                             s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
                         }
 
@@ -601,6 +590,11 @@ public class TherapyMainFragment extends Fragment {
                     }
                     break;
             }
+            getActivity().runOnUiThread(() -> {
+                if (s1CurrentQuat != null && s2CurrentQuat != null) {
+                    dataDisplay.setText("s1: " + s1CurrentQuat + "\ns2: " + s2CurrentQuat);
+                }
+            });
         }
     }
 
