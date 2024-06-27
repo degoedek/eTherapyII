@@ -204,9 +204,9 @@ public class TherapyMainFragment extends Fragment {
 
 
         // Auto refresh data thread
-        Thread thread = new Thread(this::refreshDataTh);
+//        Thread thread = new Thread(this::refreshDataTh);
         destroyed = false;
-        thread.start();
+//        thread.start();
 
         // Inflate the layout for this fragment
         return view;
@@ -531,56 +531,65 @@ public class TherapyMainFragment extends Fragment {
 
     //sensor fusion for new witmotion sensors
     private void sensorFusion(SharedViewModel viewModel, int sensorNum) {
-        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 1");
-        switch (intent) {
-            case "pose":
-                Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 2 - Pose case entered");
-                if (posing) {
-                    Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 3 - posing variable true");
-                    if (sensorNum == 1) {
-                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 4a");
-                        s1CurrentQuat = dataToQuaternion(getDeviceData(sensor1));
-                        Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s1CurrentQuat);
+        while (!destroyed) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 1");
+            switch (intent) {
+                case "pose":
+                    Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 2 - Pose case entered");
+                    if (posing) {
+                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 3 - posing variable true");
+                        if (sensorNum == 1) {
+                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 4a");
+                            s1CurrentQuat = dataToQuaternion(getDeviceData(sensor1));
+                            Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s1CurrentQuat);
 
-                        s1PoseList.insert(s1CurrentQuat);
-                    } else {
-                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 4b");
-                        s2CurrentQuat = dataToQuaternion(getDeviceData(sensor2));
-                        Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s2CurrentQuat);
-                        s2PoseList.insert(s2CurrentQuat);
+                            s1PoseList.insert(s1CurrentQuat);
+                        } else {
+                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 4b");
+                            s2CurrentQuat = dataToQuaternion(getDeviceData(sensor2));
+                            Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s2CurrentQuat);
+                            s2PoseList.insert(s2CurrentQuat);
+                        }
                     }
-                }
-                break;
-            case "therapy":
-                Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 5 - Therapy Case entered");
-                if (therapyActive) {
-                    Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 6 - therapyActive variable true");
+                    break;
+                case "therapy":
+                    Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 5 - Therapy Case entered");
+                    if (therapyActive) {
+                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 6 - therapyActive variable true");
 //                                Log.i("TherapyActivity", "Therapy Route Executing");
-                    if (sensorNum == 1) {
-                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7a");
-                        Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion(getDeviceData(sensor1)) );
-                        s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));;
-                        s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
-                    } else {
-                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
-                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
-                        Log.i("TherapyActivity", "Sensor 2: " + dataToQuaternion(getDeviceData(sensor2)) );
-                        s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));;
-                        s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+                        if (sensorNum == 1) {
+                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7a");
+                            Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion(getDeviceData(sensor1)));
+                            s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
+                            ;
+                            s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+                        } else {
+                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
+                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
+                            Log.i("TherapyActivity", "Sensor 2: " + dataToQuaternion(getDeviceData(sensor2)));
+                            s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
+                            ;
+                            s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+                        }
+
+                        // Computing Running Averages
+                        s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
+                        s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
+
+                        // Compute Euler Angles From Averages
+                        s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
+                        s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
+
+                        Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
+                        Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
                     }
-
-                    // Computing Running Averages
-                    s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
-                    s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
-
-                    // Compute Euler Angles From Averages
-                    s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
-                    s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
-
-                    Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
-                    Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
-                }
-                break;
+                    break;
+            }
         }
     }
 
