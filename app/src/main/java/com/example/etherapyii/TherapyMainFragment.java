@@ -577,20 +577,22 @@ public class TherapyMainFragment extends Fragment {
                             Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7a");
                             Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion(getDeviceData(sensor1)));
                             s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
-                            ;
+
                             s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
                         } else {
                             Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
                             Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
                             Log.i("TherapyActivity", "Sensor 2: " + dataToQuaternion(getDeviceData(sensor2)));
                             s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
-                            ;
+
                             s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
                         }
 
                         // Computing Running Averages
                         s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
                         s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
+
+                        currentDistance = quaternionDistance(s1CurrentQuat, s2CurrentQuat);
 
                         // Compute Euler Angles From Averages
                         s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
