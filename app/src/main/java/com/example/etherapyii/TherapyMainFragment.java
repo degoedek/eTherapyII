@@ -3,25 +3,14 @@ package com.example.etherapyii;
 
 import static java.lang.System.currentTimeMillis;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
 
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,38 +20,21 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-//import com.mbientlab.metawear.MetaWearBoard;
-//import com.mbientlab.metawear.Route;
-//import com.mbientlab.metawear.Subscriber;
-//import com.mbientlab.metawear.android.BtleService;
-//import com.mbientlab.metawear.module.Led;
-//import com.mbientlab.metawear.module.SensorFusionBosch;
 
 import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
-import com.wit.witsdk.modular.sensor.example.ble5.interfaces.IBwt901bleRecordObserver;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.BluetoothBLE;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.BluetoothSPP;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.WitBluetoothManager;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.exceptions.BluetoothBLEException;
-import com.wit.witsdk.modular.sensor.modular.connector.modular.bluetooth.interfaces.IBluetoothFoundObserver;
-import com.wit.witsdk.modular.sensor.device.exceptions.OpenDeviceException;
 import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import bolts.Continuation;
-
 
 public class TherapyMainFragment extends Fragment {
-    //private BtleService.LocalBinder serviceBinder;
     private boolean isClockRunning = false, started = false, repStarted = false;
     SharedViewModel viewModel;
     private String time;
     private Handler handler;
     private long startTime;
-    //private MetaWearBoard board, board2;
     private CountDownTimer repCountdown;
     private Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
     private Boolean posing = false, therapyActive = false;
@@ -78,7 +50,7 @@ public class TherapyMainFragment extends Fragment {
     private Thread S1PoseThread = new Thread(() -> sensorFusion(1));
     private Thread S2PoseThread = new Thread(() -> sensorFusion(2));
     private String intent = "pose";
-    private TextView distanceTV, HoldTV;
+    private TextView distanceTV, HoldTV, dataDisplay;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
     private int HOLD_TIME;
     private View view;
@@ -89,7 +61,6 @@ public class TherapyMainFragment extends Fragment {
     private double[] s1Angles = new double[3];
     private double[] s2Angles = new double[3];
     private float initialX, initialY;
-    //private Route s1Route, s2Route;
     private Bwt901ble sensor1, sensor2;
     private boolean destroyed = true;
 
@@ -105,23 +76,19 @@ public class TherapyMainFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_therapy_main, container, false);
 
-        viewModel.getSensor1().observe(getViewLifecycleOwner(), new Observer<Bwt901ble>(){
-            public void onChanged(@Nullable final Bwt901ble newSensor) {
-                // Update the UI with the new sensor data
-                sensor1 = newSensor;
-                // Example: Log the sensor data
-                Log.d("SensorFragment", "Sensor1 received: " + sensor1);
-            }
+        viewModel.getSensor1().observe(getViewLifecycleOwner(), newSensor -> {
+            // Update the UI with the new sensor data
+            sensor1 = newSensor;
+            // Example: Log the sensor data
+            Log.d("SensorFragment", "Sensor1 received: " + sensor1);
         });
 
-        viewModel.getSensor2().observe(getViewLifecycleOwner(), new Observer<Bwt901ble>(){
+        // Update the UI with the new sensor data
+        viewModel.getSensor2().observe(getViewLifecycleOwner(), newSensor -> {
             // Update the UI with the new sensor data
-            public void onChanged(@Nullable final Bwt901ble newSensor) {
-                // Update the UI with the new sensor data
-                sensor2 = newSensor;
-                // Example: Log the sensor data
-                Log.d("SensorFragment", "Sensor1 received: " + sensor2);
-            }
+            sensor2 = newSensor;
+            // Example: Log the sensor data
+            Log.d("SensorFragment", "Sensor1 received: " + sensor2);
         });
 
         // Variable Declaration
@@ -130,6 +97,7 @@ public class TherapyMainFragment extends Fragment {
         TextView timeTV = view.findViewById(R.id.timeTV);
         Button beginButton = view.findViewById(R.id.beginButton);
         Button stopButton = view.findViewById(R.id.btn_stop);
+        dataDisplay = view.findViewById(R.id.dataDisplay);
         circleUserWithNotch = view.findViewById(R.id.circle_user_with_notch);
         circleGoalWithNotch = view.findViewById(R.id.circle_goal_with_notch);
         int[] userCoordinates = new int[2];
@@ -168,9 +136,6 @@ public class TherapyMainFragment extends Fragment {
         repsText = repsCompleted + "/" + reps;
         repsTV.setText(repsText);
         timeTV.setText("0:00");
-
-        // Create Bluetooth Service Binding
-      //  requireActivity().getApplicationContext().bindService(new Intent(getActivity(), BtleService.class), this, Context.BIND_AUTO_CREATE);
 
         handler = new Handler(Looper.getMainLooper());
 
@@ -544,24 +509,19 @@ public class TherapyMainFragment extends Fragment {
     private void sensorFusion(int sensorNum) {
         while (!destroyed) {
             try {
-                Thread.sleep(50);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 1");
             switch (intent) {
                 case "pose":
-                    Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 2 - Pose case entered");
                     if (posing) {
-                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 3 - posing variable true");
                         if (sensorNum == 1) {
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 4a");
                             s1CurrentQuat = dataToQuaternion(getDeviceData(sensor1));
                             Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s1CurrentQuat);
 
                             s1PoseList.insert(s1CurrentQuat);
                         } else {
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 4b");
                             s2CurrentQuat = dataToQuaternion(getDeviceData(sensor2));
                             Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s2CurrentQuat);
                             s2PoseList.insert(s2CurrentQuat);
@@ -569,22 +529,14 @@ public class TherapyMainFragment extends Fragment {
                     }
                     break;
                 case "therapy":
-                    Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 5 - Therapy Case entered");
                     if (therapyActive) {
-                        Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 6 - therapyActive variable true");
-//                                Log.i("TherapyActivity", "Therapy Route Executing");
                         if (sensorNum == 1) {
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7a");
                             Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion(getDeviceData(sensor1)));
                             s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
-
                             s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
                         } else {
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
-                            Log.i("TherapyMainFragment", "Sensor Fusion Test - Checkpoint 7b");
                             Log.i("TherapyActivity", "Sensor 2: " + dataToQuaternion(getDeviceData(sensor2)));
                             s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
-
                             s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
                         }
 
@@ -603,6 +555,11 @@ public class TherapyMainFragment extends Fragment {
                     }
                     break;
             }
+            getActivity().runOnUiThread(() -> {
+                if (s1CurrentQuat != null && s2CurrentQuat != null) {
+                    dataDisplay.setText("s1: " + s1CurrentQuat + "\ns2: " + s2CurrentQuat);
+                }
+            });
         }
     }
 

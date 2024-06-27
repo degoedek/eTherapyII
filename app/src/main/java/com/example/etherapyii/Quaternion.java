@@ -10,22 +10,14 @@ public class Quaternion {
         this.z = z;
     }
 
-    public float w(){
-        return w;
-    }
-    public float x(){
-        return x;
-    }
-    public float y(){
-        return y;
-    }
+    public float w() {return w;}
+    public float x() {return x;}
+    public float y() {return y;}
 
-    public  float z(){
-        return z;
-    }
+    public  float z() {return z;}
 
     public String toString(){
-        return "Q0: "+ w+" Q1: "+x+" Q2: "+y+" Q3: "+z;
+        return "Q0: "+ String.format("%.3f", w) +" Q1: "+ String.format("%.3f", x) +" Q2: "+ String.format("%.3f", y) +" Q3: " + String.format("%.3f", z);
     }
 
 
