@@ -4,6 +4,7 @@ package com.example.etherapyii;
 import static java.lang.Math.toRadians;
 import static java.lang.System.currentTimeMillis;
 
+import android.nfc.Tag;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -21,9 +22,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-
 import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
+
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -51,7 +52,7 @@ public class TherapyMainFragment extends Fragment {
     private Thread S1PoseThread = new Thread(() -> sensorFusion(1));
     private Thread S2PoseThread = new Thread(() -> sensorFusion(2));
     private String intent = "pose";
-    private TextView distanceTV, HoldTV, dataDisplay;
+    private TextView distanceTV, HoldTV, poseDisplay, dataDisplay, s1AngularDifferenceTV, s2AngularDifferenceTV;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
     private int HOLD_TIME;
     private View view;
@@ -64,6 +65,7 @@ public class TherapyMainFragment extends Fragment {
     private float initialX, initialY;
     private Bwt901ble sensor1, sensor2;
     private boolean destroyed = true;
+
 
 
 
@@ -99,6 +101,9 @@ public class TherapyMainFragment extends Fragment {
         Button beginButton = view.findViewById(R.id.beginButton);
         Button stopButton = view.findViewById(R.id.btn_stop);
         dataDisplay = view.findViewById(R.id.dataDisplay);
+        poseDisplay = view.findViewById(R.id.poseDisplay);
+        s1AngularDifferenceTV = view.findViewById(R.id.s1AngularDifference);
+        s2AngularDifferenceTV = view.findViewById(R.id.s2AngularDifference);
         circleUserWithNotch = view.findViewById(R.id.circle_user_with_notch);
         circleGoalWithNotch = view.findViewById(R.id.circle_goal_with_notch);
         int[] userCoordinates = new int[2];
@@ -239,7 +244,9 @@ public class TherapyMainFragment extends Fragment {
 
                 // Calculate Pose Averages
                 s1Pose = s1PoseList.averageQuaternions();
+                Log.i("TherapyMainFragment", "s1Pose Not Normalized: " + s1Pose);
                 s1Pose = normalize(s1Pose);
+                Log.i("TherapyMainFragment", "s1Pose Normalized: " + s1Pose);
                 s2Pose = s2PoseList.averageQuaternions();
                 s2Pose = normalize(s2Pose);
 
@@ -248,6 +255,8 @@ public class TherapyMainFragment extends Fragment {
 
                 Log.i("TherapyActivity", "S1 Pose Angles - X = " + s1PoseAngles[0] + " Y = " + s1PoseAngles[1] + " Z = " + s1PoseAngles[2]);
                 Log.i("TherapyActivity", "S2 Pose Angles - Z = " + s2PoseAngles[0] + " Y = " + s2PoseAngles[1] + " X = " + s2PoseAngles[2]);
+                String poseDisplayString = "Pose\nS1: X = " + String.format("%.3f", s1PoseAngles[0]) + " Y = " + String.format("%.3f", s1PoseAngles[1]) + " Z = " + String.format("%.3f", s1PoseAngles[2]) + "\nS2: Z = " + String.format("%.3f", s2PoseAngles[0]) + " Y = " + String.format("%.3f", s2PoseAngles[1]) + " X = " + String.format("%.3f", s2PoseAngles[2]);
+                poseDisplay.setText(poseDisplayString);
 
 
                 // Start Clock
@@ -281,7 +290,7 @@ public class TherapyMainFragment extends Fragment {
                     distanceTV.setText(String.format("Current Angle:\n%.3f", currentDistance));
 
 
-                    handler.postDelayed(this, 500); // Update every second
+                    handler.postDelayed(this, 500); // Update every half second
                 }
             }
         });
@@ -559,13 +568,12 @@ public class TherapyMainFragment extends Fragment {
                 i = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q1));
                 j = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q2));
                 k = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q3));
-            }else{
+            } else {
                 return null;
             }
         }
 
-        float[] data = {w, i, j, k};
-        return data;
+        return new float[]{w, i, j, k};
     }
 
 
@@ -592,7 +600,6 @@ public class TherapyMainFragment extends Fragment {
                         if (sensorNum == 1) {
                             s1CurrentQuat = dataToQuaternion(getDeviceData(sensor1));
                             Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s1CurrentQuat);
-
                             s1PoseList.insert(s1CurrentQuat);
                         } else {
                             s2CurrentQuat = dataToQuaternion(getDeviceData(sensor2));
@@ -604,12 +611,12 @@ public class TherapyMainFragment extends Fragment {
                 case "therapy":
                     if (therapyActive) {
                         if (sensorNum == 1) {
-                            Log.i("TherapyActivity", "Sensor 1: " + dataToQuaternion(getDeviceData(sensor1)));
                             s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
+                            Log.i("TherapyActivity", "Sensor 1: " + s1RunningAverage[s1Index]);
                             s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
                         } else {
-                            Log.i("TherapyActivity", "Sensor 2: " + dataToQuaternion(getDeviceData(sensor2)));
                             s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
+                            Log.i("TherapyActivity", "Sensor 2: " + s2RunningAverage[s2Index]);
                             s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
                         }
 
@@ -631,15 +638,47 @@ public class TherapyMainFragment extends Fragment {
                     }
                     break;
             }
-            getActivity().runOnUiThread(() -> {
+
+            // Calculating Angular Difference
+            double[] s1AngularDifference = new double[3]; // X Y Z
+            double[] s2AngularDifference = new double[3]; // Z Y X
+
+            s1AngularDifference[0] = optimalAngularDifference(s1PoseAngles[0], s1Angles[0]); // X
+            s1AngularDifference[1] = optimalAngularDifference(s1PoseAngles[1], s1Angles[1]); // Y
+            s1AngularDifference[2] = optimalAngularDifference(s1PoseAngles[2], s1Angles[2]); // Z
+
+            s2AngularDifference[0] = optimalAngularDifference(s2PoseAngles[0], s2Angles[0]); // Z
+            s2AngularDifference[1] = optimalAngularDifference(s2PoseAngles[1], s2Angles[1]); // Y
+            s2AngularDifference[2] = optimalAngularDifference(s2PoseAngles[2], s2Angles[2]); // X
+
+
+
+            requireActivity().runOnUiThread(() -> {
                 if (s1CurrentQuat != null && s2CurrentQuat != null) {
-                    dataDisplay.setText("s1: " + s1CurrentQuat + "\ns2: " + s2CurrentQuat);
+                    String dataDisplayString = "s1: X = " + String.format("%.3f", s1Angles[0]) + " Y = " + String.format("%.3f", s1Angles[1]) + " Z = " + String.format("%.3f", s1Angles[2]) + "\ns2: Z = " + String.format("%.3f", s2Angles[0]) + " Y = " + String.format("%.3f", s2Angles[1]) + " X = " + String.format("%.3f", s2Angles[2]);
+                    dataDisplay.setText(dataDisplayString);
+
+                    String s1AngularDifferenceString = "s1:\nX = " + String.format("%.3f", s1AngularDifference[0]) + "\nY = " + String.format("%.3f", s1AngularDifference[1]) + "\nZ = " + String.format("%.3f", s1AngularDifference[2]);
+                    s1AngularDifferenceTV.setText(s1AngularDifferenceString);
+                    String s2AngularDifferenceString = "s2:\nZ = " + String.format("%.3f", s2AngularDifference[0]) + "\nY = " + String.format("%.3f", s2AngularDifference[1]) + "\nX = " + String.format("%.3f", s2AngularDifference[2]);
+                    s2AngularDifferenceTV.setText(s2AngularDifferenceString);
                 }
             });
         }
     }
 
 
+    public double optimalAngularDifference(double pose, double current) {
+        double result;
+
+        result = Math.abs(pose) + Math.abs(current);
+
+        if (result > 180) {
+            result = 360 - result;
+        }
+
+        return result;
+    }
 
 }
 
