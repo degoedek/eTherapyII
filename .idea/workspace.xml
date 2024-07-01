@@ -102,8 +102,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de878f84-49ff-46a3-a0a0-3d4ca6f2a0ad" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/DoublyLinkedList.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/DoublyLinkedList.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/Quaternion.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/Quaternion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/QuaternionNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/QuaternionNode.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyMainFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/etherapyii/TherapyMainFragment.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -114,7 +117,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\stole\.android\avd\Pixel_7_API_30.avd)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=PhysicalDevice, isTemplate=false, identifier=serial=R5CTA38EBNM)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -241,6 +244,7 @@
       <option name="MODE" value="default_activity" />
       <option name="CLEAR_LOGCAT" value="false" />
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="INSPECTION_WITHOUT_ACTIVITY_RESTART" value="false" />
       <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
       <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
       <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />

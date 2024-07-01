@@ -1,6 +1,7 @@
 package com.example.etherapyii;
 
 
+import static java.lang.Math.toRadians;
 import static java.lang.System.currentTimeMillis;
 
 import android.os.Bundle;
@@ -277,9 +278,8 @@ public class TherapyMainFragment extends Fragment {
                     time = String.format("%d:%02d", minutes, seconds);
                     timeTV.setText(time);
                     distanceTV = view.findViewById(R.id.distanceTV);
-                    if (RelativeRotationCurrent != null && RelativeRotationPose != null) {
-                        distanceTV.setText(String.format("Current Angle:\n%.3f", currentDistance));
-                    }
+                    distanceTV.setText(String.format("Current Angle:\n%.3f", currentDistance));
+
 
                     handler.postDelayed(this, 500); // Update every second
                 }
@@ -379,6 +379,79 @@ public class TherapyMainFragment extends Fragment {
         return (float) (Math.acos(2 * dotProduct * dotProduct - 1) * (180 / 3.14159));
     }
 
+    public static float calculateRotationAngle(Quaternion q1, Quaternion q2) {
+        // Ensure q1 and q2 are unit quaternions
+        q1 = new Quaternion(q1.w() / q1.norm(), q1.x() / q1.norm(), q1.y() / q1.norm(), q1.z() / q1.norm());
+        q2 = new Quaternion(q2.w() / q2.norm(), q2.x() / q2.norm(), q2.y() / q2.norm(), q2.z() / q2.norm());
+
+        // Compute the relative rotation quaternion
+        Quaternion q1Conj = q1.conjugate();
+        Quaternion relativeQ = q1Conj.multiply(q2);
+
+        // Adjust to rotate the z-axis of sensor 2 to the x-axis of sensor 1
+        Quaternion additionalRotation = new Quaternion((float) Math.cos(Math.PI / 4), 0, 0, (float) Math.sin(Math.PI / 4));
+        Quaternion finalRotation = relativeQ.multiply(additionalRotation);
+
+        // Compute the rotation angle from the final rotation quaternion
+        return finalRotation.angle();
+    }
+
+
+    private static double[] normalize(double[] vector) {
+        double magnitude = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
+        return new double[]{vector[0] / magnitude, vector[1] / magnitude, vector[2] / magnitude};
+    }
+
+    // Method to calculate the dot product of two vectors
+    private static double dot(double[] v1, double[] v2) {
+        return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+    }
+
+    public static float calculateAngularDistance(Quaternion q1, Quaternion q2) {
+        // Transform q2 to align with q1's coordinate system
+        Quaternion rotationMapping = new Quaternion(0, 0, 1, 0); // This is a 90-degree rotation around the X axis
+        Quaternion transformedQ2 = q1.multiply(rotationMapping).multiply(q2);
+
+        // Find the difference quaternion between q1 and transformedQ2
+        Quaternion qDiff = transformedQ2.multiply(q1.conjugate());
+
+        // Calculate the angle of rotation represented by qDiff
+        double angle = 2 * Math.acos(Math.abs(qDiff.w()));
+
+        // Ensure the angle is between 0 and 2π
+        return (float) (angle <= Math.PI ? angle : 2 * Math.PI - angle) ;
+    }
+    public static float getAngularDistance(Quaternion q1, Quaternion q2) {
+        // Normalize quaternions
+        q1.norm();
+        q2.norm();
+
+        // Calculate the relative quaternion
+        Quaternion q1Conjugate = q1.conjugate();
+        Quaternion relativeQuaternion = q1Conjugate.multiply(q2);
+
+        // Calculate the angular distance
+        double angularDistance = Quaternion.angleBetween(new Quaternion(1, 0, 0, 0), relativeQuaternion);
+        return (float) (angularDistance * (180/Math.PI));
+    }
+
+    public static double angularDistance(Quaternion q1, Quaternion q2) {
+        q1 = applyCombinedRotation(q1);
+        double dotProduct = q1.w() * q2.w() + q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z();
+        return (2 * Math.acos(Math.abs(dotProduct))) * (180 / Math.PI);
+    }
+
+    public static Quaternion applyCombinedRotation(Quaternion inputQuaternion) {
+        // Define the 90-degree rotation around the Y-axis and Z-axis in radians
+        float angleY = (float) toRadians(90);
+        float angleZ = (float)toRadians(90);
+
+        // Rotate first around Y-axis, then around Z-axis
+        Quaternion rotatedQuaternion = inputQuaternion.rotateY(angleY).rotateZ(angleZ);
+
+        return rotatedQuaternion;
+    }
+
     public Quaternion avgQuaternionArray(Quaternion[] array) {
         float wSum = 0, xSum = 0, ySum = 0, zSum = 0;
         int valueCounter = 0;
@@ -476,7 +549,7 @@ public class TherapyMainFragment extends Fragment {
     // four values are the first quaternion and the second four are
     //the second quaternion from the sensors
     float w, i, j, k;
-    private float[] getDeviceData(Bwt901ble sensor) {
+    private synchronized float[] getDeviceData(Bwt901ble sensor) {
 
 
 
@@ -544,7 +617,10 @@ public class TherapyMainFragment extends Fragment {
                         s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
                         s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
 
-                        currentDistance = quaternionDistance(s1CurrentQuat, s2CurrentQuat);
+                        RelativeRotationPose = findRelativeRotation(s1Pose, s2Pose);
+                        RelativeRotationCurrent = findRelativeRotation(s1CurrentQuat, s2CurrentQuat);
+
+                        currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
 
                         // Compute Euler Angles From Averages
                         s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");

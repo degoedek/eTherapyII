@@ -7,6 +7,9 @@ class QuaternionNode {
     QuaternionNode prev;
 
     public QuaternionNode(Quaternion q) {
+        if(q == null){
+            return;
+        }
         this.q0 = q.w();
         this.q1 = q.x();
         this.q2 = q.y();

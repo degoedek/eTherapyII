@@ -11,6 +11,9 @@ public class DoublyLinkedList {
     }
 
     public void insert(Quaternion t) {
+        if(t == null){
+            return;
+        }
         QuaternionNode newNode = new QuaternionNode(t);
         newNode.prev = head;
         newNode.next = head.next;
