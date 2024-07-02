@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
 
 
 public class TherapyMainFragment extends Fragment {
+    private boolean positionChanged = false;
     private boolean isClockRunning = false, started = false, repStarted = false;
     SharedViewModel viewModel;
     private String time;
@@ -49,12 +50,31 @@ public class TherapyMainFragment extends Fragment {
     private Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     private int s1Index = 0, s2Index = 0;
     private float currentDistance;
-    private Thread S1PoseThread = new Thread(() -> sensorFusion(1));
-    private Thread S2PoseThread = new Thread(() -> sensorFusion(2));
+    private Thread S1PoseThread = new Thread(() -> {
+        try {
+            sensorFusion(1);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    });
+    private Thread S2PoseThread = new Thread(() -> {
+        try {
+            sensorFusion(2);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    });
+    private Thread trackThread = new Thread(() -> {
+        try {
+            trackHold();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    });
     private String intent = "pose";
     private TextView distanceTV, HoldTV, poseDisplay, dataDisplay, s1AngularDifferenceTV, s2AngularDifferenceTV;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
-    private int HOLD_TIME;
+    private int HOLD_TIME, timeHeld;
     private View view;
     private Handler uiHandler = new Handler();
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -65,6 +85,11 @@ public class TherapyMainFragment extends Fragment {
     private float initialX, initialY;
     private Bwt901ble sensor1, sensor2;
     private boolean destroyed = true;
+    int reps, repsCompleted = 0;
+
+
+
+
 
 
 
@@ -108,7 +133,6 @@ public class TherapyMainFragment extends Fragment {
         circleGoalWithNotch = view.findViewById(R.id.circle_goal_with_notch);
         int[] userCoordinates = new int[2];
         String therapyType;
-        int reps, repsCompleted = 0;
         String repsText;
 
         circleGoalWithNotch.post(() -> {
@@ -161,6 +185,7 @@ public class TherapyMainFragment extends Fragment {
             destroyed = true;
             S1PoseThread.interrupt();
             S2PoseThread.interrupt();
+            trackThread.interrupt();
 
 
             Bundle bundle = new Bundle();
@@ -268,6 +293,8 @@ public class TherapyMainFragment extends Fragment {
                 therapyActive = true;
                 intent = "therapy";
 
+                trackThread.start();
+
                 // Adjusting Button Visibility
                 beginButton.setVisibility(View.GONE);
                 stopButton.setVisibility(View.VISIBLE);
@@ -288,6 +315,11 @@ public class TherapyMainFragment extends Fragment {
                     timeTV.setText(time);
                     distanceTV = view.findViewById(R.id.distanceTV);
                     distanceTV.setText(String.format("Current Angle:\n%.3f", currentDistance));
+                    TextView repsTV = view.findViewById(R.id.repsTV);
+
+
+                    repsTV.setText(repsCompleted +"/"+reps);
+
 
 
                     handler.postDelayed(this, 500); // Update every half second
@@ -587,7 +619,7 @@ public class TherapyMainFragment extends Fragment {
 
 
     //sensor fusion for new witmotion sensors
-    private void sensorFusion(int sensorNum) {
+    private void sensorFusion(int sensorNum) throws InterruptedException {
         while (!destroyed) {
             try {
                 Thread.sleep(200);
@@ -599,11 +631,11 @@ public class TherapyMainFragment extends Fragment {
                     if (posing) {
                         if (sensorNum == 1) {
                             s1CurrentQuat = dataToQuaternion(getDeviceData(sensor1));
-                            Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s1CurrentQuat);
+            //                Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s1CurrentQuat);
                             s1PoseList.insert(s1CurrentQuat);
                         } else {
                             s2CurrentQuat = dataToQuaternion(getDeviceData(sensor2));
-                            Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s2CurrentQuat);
+           //                 Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s2CurrentQuat);
                             s2PoseList.insert(s2CurrentQuat);
                         }
                     }
@@ -612,11 +644,11 @@ public class TherapyMainFragment extends Fragment {
                     if (therapyActive) {
                         if (sensorNum == 1) {
                             s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
-                            Log.i("TherapyActivity", "Sensor 1: " + s1RunningAverage[s1Index]);
+        //                    Log.i("TherapyActivity", "Sensor 1: " + s1RunningAverage[s1Index]);
                             s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
                         } else {
                             s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
-                            Log.i("TherapyActivity", "Sensor 2: " + s2RunningAverage[s2Index]);
+        //                    Log.i("TherapyActivity", "Sensor 2: " + s2RunningAverage[s2Index]);
                             s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
                         }
 
@@ -629,12 +661,13 @@ public class TherapyMainFragment extends Fragment {
 
                         currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
 
+
                         // Compute Euler Angles From Averages
                         s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
                         s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
 
-                        Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
-                        Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
+    //                    Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
+    //                    Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
                     }
                     break;
             }
@@ -679,6 +712,56 @@ public class TherapyMainFragment extends Fragment {
 
         return result;
     }
+
+    public void trackHold() throws InterruptedException {
+
+        Log.i("TherapyActivity", "Track Hold running");
+
+        long startTime = System.currentTimeMillis();
+        boolean holdStarted = false;
+        double DISTANCE_CHANGE_THRESHOLD = 30;
+
+
+
+        while (true) { // Use a condition to exit the loop
+            if(currentDistance>= DISTANCE_CHANGE_THRESHOLD){
+                Log.i("TherapyActivity", "Distance Changed");
+                positionChanged=true;
+            }
+        //    Log.i("TherapyActivity", "TrackHold Distance: " + currentDistance);
+
+            synchronized (this) { // Ensure thread-safe read of currentDistance
+                if (currentDistance < ACCURACY_THRESHOLD) {
+                    if (!holdStarted) {
+                        startTime = System.currentTimeMillis();
+                        holdStarted = true;
+                    }
+
+
+
+                    if (System.currentTimeMillis() - startTime >= (HOLD_TIME * 1000)) {
+                        // Check if the distance has changed by the threshold amount
+                        if (positionChanged) {
+                            repsCompleted++;
+                            Log.i("TherapyActivity", "Reps completed: " + repsCompleted);
+                            holdStarted = false;
+                            positionChanged = false;
+                            trackThread.sleep(2 * 1000);
+                        }
+                    }
+                } else {
+                    // Reset the timer and hold flag if the distance is not maintained
+                    startTime = System.currentTimeMillis();
+                    holdStarted = false;
+                }
+            }
+            trackThread.sleep(200);
+        }
+
+    }
+
+
+
 
 }
 
