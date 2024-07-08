@@ -1,6 +1,5 @@
 package com.example.etherapyii;
 
-import com.mbientlab.metawear.data.Quaternion;
 
 public class DoublyLinkedList {
     private QuaternionNode head;
@@ -12,6 +11,9 @@ public class DoublyLinkedList {
     }
 
     public void insert(Quaternion t) {
+        if(t == null){
+            return;
+        }
         QuaternionNode newNode = new QuaternionNode(t);
         newNode.prev = head;
         newNode.next = head.next;

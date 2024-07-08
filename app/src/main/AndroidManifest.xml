@@ -31,28 +31,10 @@
             android:name=".TherapyContainer"
             android:exported="false" />
         <activity
-            android:name=".SummaryPage"
-            android:exported="false" />
-        <activity
-            android:name=".TherapyActivity"
-            android:exported="false" />
-        <activity
-            android:name=".TherapyDescription"
-            android:exported="false" />
-        <activity
-            android:name=".SensorPlacement"
-            android:exported="false" />
-        <activity
-            android:name=".TherapySelection"
-            android:exported="false" />
-        <activity
             android:name=".WIPActivity"
             android:exported="false" />
         <activity
             android:name=".HubActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ConnectionActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

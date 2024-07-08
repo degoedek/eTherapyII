@@ -29,4 +29,6 @@
     <string name="number_of_repetitions">Number of repetitions:</string>
     <string name="number_of_sets">Number of sets:</string>
     <string name="holding_time_on_target">Holding time on target:</string>
+    <string name="Accel_Calibration_Instructions">Accelerometer Calibration Instructions:\nLay the sensor flat for three seconds</string>
+    <string name="Magnetic_Calibration_Instructions">Magnetic Calibration Instructions:\n1. Orient the sensor with y forward, x right, and z upwards\n2. Rotate 360° about the x axis towards you slowly\n3. Point y to the right\n4. Rotate 360° about the y axis\n5. Point z to the right\n6. Rotate 360° about the z axis\n7. Press \'Stop Calibrating\'</string>
 </resources>
