@@ -713,7 +713,7 @@ public class TherapyMainFragment extends Fragment {
     }
 
     public void trackHold() throws InterruptedException {
-
+        boolean soundPlayer = true;
         Log.i("TherapyActivity", "Track Hold running");
 
         long startTime = System.currentTimeMillis();
@@ -732,8 +732,10 @@ public class TherapyMainFragment extends Fragment {
                     if (!holdStarted) {
                         startTime = System.currentTimeMillis();
                         holdStarted = true;
-                        player = MediaPlayer.create(requireActivity(), R.raw.ping_sound);
-                        player.start();
+                        if (soundPlayer) {
+                            player = MediaPlayer.create(requireActivity(), R.raw.ping_sound);
+                            player.start();
+                        }
                     }
 
                     if (System.currentTimeMillis() - startTime >= (HOLD_TIME * 1000)) {
@@ -747,12 +749,14 @@ public class TherapyMainFragment extends Fragment {
                                 player = MediaPlayer.create(requireActivity(), R.raw.exercise_complete_sound);
                                 player.start();
                                 repsCompletedB = true;
+                                soundPlayer = false;
                             } else {
                                 player = MediaPlayer.create(requireActivity(), R.raw.rep_complete_sound);
                                 player.start();
                             }
 
-                            trackThread.sleep(2 * 1000);
+                            trackThread.sleep(3 * 1000);
+                            soundPlayer = true;
                         }
                     }
                 } else {
