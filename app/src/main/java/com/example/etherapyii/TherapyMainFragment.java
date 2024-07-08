@@ -4,7 +4,7 @@ package com.example.etherapyii;
 import static java.lang.Math.toRadians;
 import static java.lang.System.currentTimeMillis;
 
-import android.nfc.Tag;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -86,13 +86,7 @@ public class TherapyMainFragment extends Fragment {
     private Bwt901ble sensor1, sensor2;
     private boolean destroyed = true;
     int reps, repsCompleted = 0;
-
-
-
-
-
-
-
+    MediaPlayer player;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -188,6 +182,8 @@ public class TherapyMainFragment extends Fragment {
             S1PoseThread.interrupt();
             S2PoseThread.interrupt();
             trackThread.interrupt();
+            player.release();
+            player = null;
 
 
             Bundle bundle = new Bundle();
@@ -723,8 +719,6 @@ public class TherapyMainFragment extends Fragment {
         boolean holdStarted = false;
         double DISTANCE_CHANGE_THRESHOLD = 1.25 * ACCURACY_THRESHOLD;
 
-
-
         while (true) { // Use a condition to exit the loop
             if(currentDistance>= DISTANCE_CHANGE_THRESHOLD){
                 positionChanged=true;
@@ -737,9 +731,9 @@ public class TherapyMainFragment extends Fragment {
                     if (!holdStarted) {
                         startTime = System.currentTimeMillis();
                         holdStarted = true;
+                        player = MediaPlayer.create(requireActivity(), R.raw.ping_sound);
+                        player.start();
                     }
-
-
 
                     if (System.currentTimeMillis() - startTime >= (HOLD_TIME * 1000)) {
                         // Check if the distance has changed by the threshold amount
@@ -748,16 +742,24 @@ public class TherapyMainFragment extends Fragment {
                             Log.i("TherapyActivity", "Reps completed: " + repsCompleted);
                             holdStarted = false;
                             positionChanged = false;
+                            player = MediaPlayer.create(requireActivity(), R.raw.rep_complete_sound);
+                            player.start();
                             trackThread.sleep(2 * 1000);
                         }
                     }
                 } else {
                     // Reset the timer and hold flag if the distance is not maintained
                     startTime = System.currentTimeMillis();
+                    if (holdStarted) {
+                        player = MediaPlayer.create(requireActivity(), R.raw.fail_sound);
+                        player.start();
+                    }
                     holdStarted = false;
+
+
                 }
             }
-            trackThread.sleep(200);
+//            trackThread.sleep(200);
         }
 
     }
