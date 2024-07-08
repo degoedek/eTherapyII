@@ -81,12 +81,15 @@ public class SensorPlacementFragment extends Fragment implements ServiceConnecti
             int reps = seekBar.getProgress();
             SeekBar seekBar2 = view.findViewById(R.id.hold_input);
             int holdTime = seekBar2.getProgress();
+            SeekBar seekBar3 = view.findViewById(R.id.threshhold_input);
+            int threshold = seekBar3.getProgress();
 
             // Create a bundle with the necessary information
             Bundle bundle = new Bundle();
             bundle.putString("therapy", therapy);
             bundle.putInt("reps", reps);
             bundle.putInt("holdTime", holdTime);
+            bundle.putInt("threshold", threshold);
 
             // Create the new fragment and set the bundle as its arguments
             TherapyMainFragment therapyMainFragment = new TherapyMainFragment();
@@ -134,6 +137,25 @@ public class SensorPlacementFragment extends Fragment implements ServiceConnecti
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar2) {
+                // Not needed for this example
+            }
+        });
+
+        SeekBar seekBar3 = view.findViewById(R.id.threshhold_input);
+        TextView valueLabel3 = view.findViewById(R.id.threshhold_value_label);
+        seekBar3.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar3, int progress, boolean fromUser) {
+                valueLabel3.setText(String.valueOf(progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar3) {
+                // Not needed for this example
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar3) {
                 // Not needed for this example
             }
         });

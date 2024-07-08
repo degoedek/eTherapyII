@@ -77,14 +77,14 @@
         android:id="@+id/hold_value_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="152dp"
+        android:layout_marginTop="56dp"
         android:text="3"
         android:textColor="@android:color/black"
         android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.101"
         app:layout_constraintStart_toEndOf="@+id/set_hold_timer"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/reps_value_label" />
 
     <TextView
         android:id="@+id/set_hold_timer"
@@ -99,6 +99,46 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
+    <TextView
+        android:id="@+id/set_thresh_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="220dp"
+        android:gravity="center"
+        android:text="Degree of accuracy:"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.365"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/threshhold_value_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:text="10"
+        android:textColor="@android:color/black"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.101"
+        app:layout_constraintStart_toEndOf="@+id/set_hold_timer"
+        app:layout_constraintTop_toBottomOf="@+id/hold_value_label" />
+
+    <SeekBar
+        android:id="@+id/threshhold_input"
+        android:layout_width="302dp"
+        android:layout_height="26dp"
+        android:layout_marginTop="16dp"
+        android:max="50"
+        android:min="10"
+        android:progress="3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.394"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/set_thresh_timer" />
+
     <ImageView
         android:id="@+id/hott_hand"
         android:layout_width="210dp"
@@ -108,17 +148,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
 
-        />
+        app:layout_constraintVertical_bias="0.673" />
 
     <ImageView
         android:id="@+id/hott_human"
         android:layout_width="177dp"
         android:layout_height="244dp"
+        android:layout_marginStart="4dp"
         android:src="@drawable/hott_human"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.494" />
+        app:layout_constraintVertical_bias="0.671" />
 
     <Button
         android:id="@+id/start_activity"
