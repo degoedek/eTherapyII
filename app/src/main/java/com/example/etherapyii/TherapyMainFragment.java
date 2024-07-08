@@ -45,7 +45,7 @@ public class TherapyMainFragment extends Fragment {
     private DoublyLinkedList s1PoseList = new DoublyLinkedList();
     private DoublyLinkedList s2PoseList = new DoublyLinkedList();
     private final int RUNNING_AVG_SIZE = 5;
-    private final float ACCURACY_THRESHOLD = 10F;
+    private float ACCURACY_THRESHOLD;
     private Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     private Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     private int s1Index = 0, s2Index = 0;
@@ -146,6 +146,8 @@ public class TherapyMainFragment extends Fragment {
         therapyType = getArguments().getString("therapy");
         reps = getArguments().getInt("reps");
         HOLD_TIME = getArguments().getInt("holdTime");
+        ACCURACY_THRESHOLD = getArguments().getInt("threshold");
+        Log.i("TherapyMainFragment", "Accuracy set " + ACCURACY_THRESHOLD);
         Log.i("TherapyMainFragment", "therapyType: " + therapyType + " reps: " + reps + " holdTime: " + HOLD_TIME);
 
         // Set Title
@@ -716,16 +718,16 @@ public class TherapyMainFragment extends Fragment {
 
         long startTime = System.currentTimeMillis();
         boolean holdStarted = false;
-        double DISTANCE_CHANGE_THRESHOLD = 30;
+        double DISTANCE_CHANGE_THRESHOLD = 1.25 * ACCURACY_THRESHOLD;
 
         while (true) { // Use a condition to exit the loop
             if(currentDistance>= DISTANCE_CHANGE_THRESHOLD){
-                Log.i("TherapyActivity", "Distance Changed");
                 positionChanged=true;
             }
         //    Log.i("TherapyActivity", "TrackHold Distance: " + currentDistance);
 
             synchronized (this) { // Ensure thread-safe read of currentDistance
+                Log.i("TherapyActivity", "Accuracy in hold: " + ACCURACY_THRESHOLD);
                 if (currentDistance < ACCURACY_THRESHOLD) {
                     if (!holdStarted) {
                         startTime = System.currentTimeMillis();
