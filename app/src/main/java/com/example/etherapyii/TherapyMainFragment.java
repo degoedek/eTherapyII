@@ -87,6 +87,7 @@ public class TherapyMainFragment extends Fragment {
     private boolean destroyed = true;
     int reps, repsCompleted = 0;
     MediaPlayer player;
+    boolean repsCompletedB = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -740,8 +741,15 @@ public class TherapyMainFragment extends Fragment {
                             Log.i("TherapyActivity", "Reps completed: " + repsCompleted);
                             holdStarted = false;
                             positionChanged = false;
-                            player = MediaPlayer.create(requireActivity(), R.raw.rep_complete_sound);
-                            player.start();
+                            if (repsCompleted == reps && !repsCompletedB) {
+                                player = MediaPlayer.create(requireActivity(), R.raw.exercise_complete_sound);
+                                player.start();
+                                repsCompletedB = true;
+                            } else {
+                                player = MediaPlayer.create(requireActivity(), R.raw.rep_complete_sound);
+                                player.start();
+                            }
+
                             trackThread.sleep(2 * 1000);
                         }
                     }

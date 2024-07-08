@@ -12,6 +12,7 @@
     <color name="gray">#323235</color>
     <color name="grey">#bebebe</color>
     <color name="lightgray">#d3d3d3</color>
+    <color name="transGray">#70d3d3d3</color>
     <color name="yellow">#ffff00</color>
     <color name="blue">#36a5cc</color>
     <color name="darkred">#9c302b</color>
