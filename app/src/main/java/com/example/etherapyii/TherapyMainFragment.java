@@ -51,26 +51,12 @@ public class TherapyMainFragment extends Fragment {
     private int s1Index = 0, s2Index = 0;
     private float currentDistance;
     private Thread S1PoseThread = new Thread(() -> {
-        try {
-            sensorFusion(1);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        sensorFusion(1);
     });
     private Thread S2PoseThread = new Thread(() -> {
-        try {
-            sensorFusion(2);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        sensorFusion(2);
     });
-    private Thread trackThread = new Thread(() -> {
-        try {
-            trackHold();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    });
+    private Thread trackThread = new Thread(this::trackHold);
     private String intent = "pose";
     private TextView distanceTV, HoldTV, poseDisplay, dataDisplay, s1AngularDifferenceTV, s2AngularDifferenceTV;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
@@ -203,27 +189,6 @@ public class TherapyMainFragment extends Fragment {
 
         // Inflate the layout for this fragment
         return view;
-    }
-
-    private void refreshDataTh() {
-
-        while (!destroyed) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            StringBuilder text = new StringBuilder();
-//            for (int i = 0; i < bwt901bleList.size(); i++) {
-//                // 让所有设备进行加计校准
-//                // Make all devices accelerometer calibrated
-//                Bwt901ble bwt901ble = bwt901bleList.get(i);
-//                String deviceData = getDeviceData(bwt901ble);
-//                text.append(deviceData);
-//            }
-
-        }
     }
 
 
@@ -612,75 +577,50 @@ public class TherapyMainFragment extends Fragment {
     }
 
 
-    //sensor fusion for new witmotion sensors
-    private void sensorFusion(int sensorNum) throws InterruptedException {
-        while (!destroyed) {
-            try {
+    private void sensorFusion(int sensorNum) {
+        try {
+            while (!destroyed) {
                 Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            switch (intent) {
-                case "pose":
-                    if (posing) {
-                        if (sensorNum == 1) {
-                            s1CurrentQuat = dataToQuaternion(getDeviceData(sensor1));
-            //                Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s1CurrentQuat);
-                            s1PoseList.insert(s1CurrentQuat);
-                        } else {
-                            s2CurrentQuat = dataToQuaternion(getDeviceData(sensor2));
-           //                 Log.i("TherapyActivity", "Pose Route Executing - sensorNum: " + sensorNum + " - data: " + s2CurrentQuat);
-                            s2PoseList.insert(s2CurrentQuat);
+
+                switch (intent) {
+                    case "pose":
+                        if (posing) {
+                            if (sensorNum == 1) {
+                                s1CurrentQuat = dataToQuaternion(getDeviceData(sensor1));
+                                s1PoseList.insert(s1CurrentQuat);
+                            } else {
+                                s2CurrentQuat = dataToQuaternion(getDeviceData(sensor2));
+                                s2PoseList.insert(s2CurrentQuat);
+                            }
                         }
-                    }
-                    break;
-                case "therapy":
-                    if (therapyActive) {
-                        if (sensorNum == 1) {
-                            s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
-        //                    Log.i("TherapyActivity", "Sensor 1: " + s1RunningAverage[s1Index]);
-                            s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
-                        } else {
-                            s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
-        //                    Log.i("TherapyActivity", "Sensor 2: " + s2RunningAverage[s2Index]);
-                            s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+                        break;
+                    case "therapy":
+                        if (therapyActive) {
+                            if (sensorNum == 1) {
+                                s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
+                                s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+                            } else {
+                                s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
+                                s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+                            }
+
+                            s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
+                            s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
+
+                            RelativeRotationPose = findRelativeRotation(s1Pose, s2Pose);
+                            RelativeRotationCurrent = findRelativeRotation(s1CurrentQuat, s2CurrentQuat);
+
+                            currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
+
+                            s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
+                            s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
                         }
-
-                        // Computing Running Averages
-                        s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
-                        s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
-
-                        RelativeRotationPose = findRelativeRotation(s1Pose, s2Pose);
-                        RelativeRotationCurrent = findRelativeRotation(s1CurrentQuat, s2CurrentQuat);
-
-                        currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
-
-
-                        // Compute Euler Angles From Averages
-                        s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
-                        s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
-
-    //                    Log.i("TherapyActivity", "s1Angles: X = " + s1Angles[0] + " Y = " + s1Angles[1] + " Z = " + s1Angles[2]);
-    //                    Log.i("TherapyActivity", "s2Angles: Z = " + s2Angles[0] + " Y = " + s2Angles[1] + " X = " + s2Angles[2]);
-                    }
-                    break;
+                        break;
+                }
             }
-
-            // Calculating Angular Difference
-            double[] s1AngularDifference = new double[3]; // X Y Z
-            double[] s2AngularDifference = new double[3]; // Z Y X
-
-            s1AngularDifference[0] = optimalAngularDifference(s1PoseAngles[0], s1Angles[0]); // X
-            s1AngularDifference[1] = optimalAngularDifference(s1PoseAngles[1], s1Angles[1]); // Y
-            s1AngularDifference[2] = optimalAngularDifference(s1PoseAngles[2], s1Angles[2]); // Z
-
-            s2AngularDifference[0] = optimalAngularDifference(s2PoseAngles[0], s2Angles[0]); // Z
-            s2AngularDifference[1] = optimalAngularDifference(s2PoseAngles[1], s2Angles[1]); // Y
-            s2AngularDifference[2] = optimalAngularDifference(s2PoseAngles[2], s2Angles[2]); // X
-
-
-
-
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Log.e("TherapyActivity", "Sensor Fusion interrupted", e);
         }
     }
 
@@ -713,69 +653,66 @@ public class TherapyMainFragment extends Fragment {
         });
     }
 
-    public void trackHold() throws InterruptedException {
+    public void trackHold() {
         Log.i("TherapyActivity", "Track Hold running");
 
         long startTime = System.currentTimeMillis();
         boolean holdStarted = false, posed = true;
         double DISTANCE_CHANGE_THRESHOLD = 1.25 * ACCURACY_THRESHOLD;
 
-        while (true) { // Use a condition to exit the loop
-            if (currentDistance >= DISTANCE_CHANGE_THRESHOLD) {
-                positionChanged = true;
-                posed = false;
-            }
-            // Log.i("TherapyActivity", "TrackHold Distance: " + currentDistance);
-
-            synchronized (this) { // Ensure thread-safe read of currentDistance
-                // Log.i("TherapyActivity", "Accuracy in hold: " + ACCURACY_THRESHOLD);
-                if (currentDistance < ACCURACY_THRESHOLD) {
-
-                    if (!holdStarted) {
-                        startTime = System.currentTimeMillis();
-                        holdStarted = true;
-                        player = MediaPlayer.create(requireActivity(), R.raw.ping_sound);
-                        player.start();
-                    }
-
-                    if (!posed && positionChanged) {
-                        updateHoldTimer(startTime); // Continuously update the hold timer while holding
-                    }
-
-                    if (System.currentTimeMillis() - startTime >= (HOLD_TIME * 1000)) {
-
-                        // Check if the distance has changed by the threshold amount
-                        if (positionChanged) {
-                            repsCompleted++;
-                            Log.i("TherapyActivity", "Reps completed: " + repsCompleted);
-                            holdStarted = false;
-                            positionChanged = false;
-                            if (repsCompleted == reps && !repsCompletedB) {
-                                player = MediaPlayer.create(requireActivity(), R.raw.exercise_complete_sound);
-                                player.start();
-                                repsCompletedB = true;
-                            } else {
-                                player = MediaPlayer.create(requireActivity(), R.raw.rep_complete_sound);
-                                player.start();
-                            }
-
-                            postUpdateHoldTextView(""); // Clear the hold text
-
-                            Thread.sleep(3 * 1000);
-                        }
-                    }
-                } else {
-                    // Reset the timer and hold flag if the distance is not maintained
-                    startTime = System.currentTimeMillis();
-                    if (holdStarted) {
-                        player = MediaPlayer.create(requireActivity(), R.raw.fail_sound);
-                        player.start();
-                        postUpdateHoldTextView(""); // Clear the hold text
-                    }
-                    holdStarted = false;
+        try {
+            while (true) { // Use a condition to exit the loop
+                if (currentDistance >= DISTANCE_CHANGE_THRESHOLD) {
+                    positionChanged = true;
+                    posed = false;
                 }
+
+                synchronized (this) { // Ensure thread-safe read of currentDistance
+                    if (currentDistance < ACCURACY_THRESHOLD) {
+                        if (!holdStarted) {
+                            startTime = System.currentTimeMillis();
+                            holdStarted = true;
+                            player = MediaPlayer.create(requireActivity(), R.raw.ping_sound);
+                            player.start();
+                        }
+
+                        if (!posed && positionChanged) {
+                            updateHoldTimer(startTime); // Continuously update the hold timer while holding
+                        }
+
+                        if (System.currentTimeMillis() - startTime >= (HOLD_TIME * 1000)) {
+                            if (positionChanged) {
+                                repsCompleted++;
+                                holdStarted = false;
+                                positionChanged = false;
+                                if (repsCompleted == reps && !repsCompletedB) {
+                                    player = MediaPlayer.create(requireActivity(), R.raw.exercise_complete_sound);
+                                    player.start();
+                                    repsCompletedB = true;
+                                } else {
+                                    player = MediaPlayer.create(requireActivity(), R.raw.rep_complete_sound);
+                                    player.start();
+                                }
+
+                                postUpdateHoldTextView(""); // Clear the hold text
+                                Thread.sleep(3 * 1000);
+                            }
+                        }
+                    } else {
+                        startTime = System.currentTimeMillis();
+                        if (holdStarted) {
+                            player = MediaPlayer.create(requireActivity(), R.raw.fail_sound);
+                            player.start();
+                            postUpdateHoldTextView(""); // Clear the hold text
+                        }
+                        holdStarted = false;
+                    }
+                }
+                Thread.sleep(200);
             }
-            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Log.e("TherapyActivity", "Track Hold interrupted", e);
         }
     }
 
