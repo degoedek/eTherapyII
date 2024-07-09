@@ -120,10 +120,7 @@ public class TherapyMainFragment extends Fragment {
         TextView timeTV = view.findViewById(R.id.timeTV);
         Button beginButton = view.findViewById(R.id.beginButton);
         Button stopButton = view.findViewById(R.id.btn_stop);
-        dataDisplay = view.findViewById(R.id.dataDisplay);
-        poseDisplay = view.findViewById(R.id.poseDisplay);
-        s1AngularDifferenceTV = view.findViewById(R.id.s1AngularDifference);
-        s2AngularDifferenceTV = view.findViewById(R.id.s2AngularDifference);
+        HoldTV = view.findViewById(R.id.HoldTV);
         circleUserWithNotch = view.findViewById(R.id.circle_user_with_notch);
         circleGoalWithNotch = view.findViewById(R.id.circle_goal_with_notch);
         int[] userCoordinates = new int[2];
@@ -279,8 +276,6 @@ public class TherapyMainFragment extends Fragment {
 
                 Log.i("TherapyActivity", "S1 Pose Angles - X = " + s1PoseAngles[0] + " Y = " + s1PoseAngles[1] + " Z = " + s1PoseAngles[2]);
                 Log.i("TherapyActivity", "S2 Pose Angles - Z = " + s2PoseAngles[0] + " Y = " + s2PoseAngles[1] + " X = " + s2PoseAngles[2]);
-                String poseDisplayString = "Pose\nS1: X = " + String.format("%.3f", s1PoseAngles[0]) + " Y = " + String.format("%.3f", s1PoseAngles[1]) + " Z = " + String.format("%.3f", s1PoseAngles[2]) + "\nS2: Z = " + String.format("%.3f", s2PoseAngles[0]) + " Y = " + String.format("%.3f", s2PoseAngles[1]) + " X = " + String.format("%.3f", s2PoseAngles[2]);
-                poseDisplay.setText(poseDisplayString);
 
 
                 // Start Clock
@@ -685,17 +680,7 @@ public class TherapyMainFragment extends Fragment {
 
 
 
-            requireActivity().runOnUiThread(() -> {
-                if (s1CurrentQuat != null && s2CurrentQuat != null) {
-                    String dataDisplayString = "s1: X = " + String.format("%.3f", s1Angles[0]) + " Y = " + String.format("%.3f", s1Angles[1]) + " Z = " + String.format("%.3f", s1Angles[2]) + "\ns2: Z = " + String.format("%.3f", s2Angles[0]) + " Y = " + String.format("%.3f", s2Angles[1]) + " X = " + String.format("%.3f", s2Angles[2]);
-                    dataDisplay.setText(dataDisplayString);
 
-                    String s1AngularDifferenceString = "s1:\nX = " + String.format("%.3f", s1AngularDifference[0]) + "\nY = " + String.format("%.3f", s1AngularDifference[1]) + "\nZ = " + String.format("%.3f", s1AngularDifference[2]);
-                    s1AngularDifferenceTV.setText(s1AngularDifferenceString);
-                    String s2AngularDifferenceString = "s2:\nZ = " + String.format("%.3f", s2AngularDifference[0]) + "\nY = " + String.format("%.3f", s2AngularDifference[1]) + "\nX = " + String.format("%.3f", s2AngularDifference[2]);
-                    s2AngularDifferenceTV.setText(s2AngularDifferenceString);
-                }
-            });
         }
     }
 
@@ -711,34 +696,54 @@ public class TherapyMainFragment extends Fragment {
 
         return result;
     }
+    private void updateHoldTimer(long startTime) {
+        long elapsedMillis = System.currentTimeMillis() - startTime;
+        int seconds = (int) (elapsedMillis / 1000);
+        int remainingSeconds = HOLD_TIME - seconds;
+
+        if (remainingSeconds >= 0) {
+            postUpdateHoldTextView(remainingSeconds);
+        }
+    }
+
+    private void postUpdateHoldTextView(int remainingSeconds) {
+        uiHandler.post(() -> {
+            String holdText = "Hold: " + remainingSeconds + "s";
+            HoldTV.setText(holdText);
+        });
+    }
 
     public void trackHold() throws InterruptedException {
-        boolean soundPlayer = true;
         Log.i("TherapyActivity", "Track Hold running");
 
         long startTime = System.currentTimeMillis();
-        boolean holdStarted = false;
+        boolean holdStarted = false, posed = true;
         double DISTANCE_CHANGE_THRESHOLD = 1.25 * ACCURACY_THRESHOLD;
 
         while (true) { // Use a condition to exit the loop
-            if(currentDistance>= DISTANCE_CHANGE_THRESHOLD){
-                positionChanged=true;
+            if (currentDistance >= DISTANCE_CHANGE_THRESHOLD) {
+                positionChanged = true;
+                posed = false;
             }
-        //    Log.i("TherapyActivity", "TrackHold Distance: " + currentDistance);
+            // Log.i("TherapyActivity", "TrackHold Distance: " + currentDistance);
 
             synchronized (this) { // Ensure thread-safe read of currentDistance
-                Log.i("TherapyActivity", "Accuracy in hold: " + ACCURACY_THRESHOLD);
+                // Log.i("TherapyActivity", "Accuracy in hold: " + ACCURACY_THRESHOLD);
                 if (currentDistance < ACCURACY_THRESHOLD) {
+
                     if (!holdStarted) {
                         startTime = System.currentTimeMillis();
                         holdStarted = true;
-                        if (soundPlayer) {
-                            player = MediaPlayer.create(requireActivity(), R.raw.ping_sound);
-                            player.start();
-                        }
+                        player = MediaPlayer.create(requireActivity(), R.raw.ping_sound);
+                        player.start();
+                    }
+
+                    if (!posed && positionChanged) {
+                        updateHoldTimer(startTime); // Continuously update the hold timer while holding
                     }
 
                     if (System.currentTimeMillis() - startTime >= (HOLD_TIME * 1000)) {
+
                         // Check if the distance has changed by the threshold amount
                         if (positionChanged) {
                             repsCompleted++;
@@ -749,14 +754,14 @@ public class TherapyMainFragment extends Fragment {
                                 player = MediaPlayer.create(requireActivity(), R.raw.exercise_complete_sound);
                                 player.start();
                                 repsCompletedB = true;
-                                soundPlayer = false;
                             } else {
                                 player = MediaPlayer.create(requireActivity(), R.raw.rep_complete_sound);
                                 player.start();
                             }
 
-                            trackThread.sleep(3 * 1000);
-                            soundPlayer = true;
+                            postUpdateHoldTextView(""); // Clear the hold text
+
+                            Thread.sleep(3 * 1000);
                         }
                     }
                 } else {
@@ -765,18 +770,18 @@ public class TherapyMainFragment extends Fragment {
                     if (holdStarted) {
                         player = MediaPlayer.create(requireActivity(), R.raw.fail_sound);
                         player.start();
+                        postUpdateHoldTextView(""); // Clear the hold text
                     }
                     holdStarted = false;
-
-
                 }
             }
-//            trackThread.sleep(200);
+            Thread.sleep(200);
         }
-
     }
 
-
+    private void postUpdateHoldTextView(String text) {
+        uiHandler.post(() -> HoldTV.setText(text));
+    }
 
 
 }
