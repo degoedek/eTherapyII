@@ -31,4 +31,21 @@
     <string name="holding_time_on_target">Holding time on target:</string>
     <string name="Accel_Calibration_Instructions">Accelerometer Calibration Instructions:\nLay the sensor flat for three seconds</string>
     <string name="Magnetic_Calibration_Instructions">Magnetic Calibration Instructions:\n1. Orient the sensor with y forward, x right, and z upwards\n2. Rotate 360° about the x axis towards you slowly\n3. Point y to the right\n4. Rotate 360° about the y axis\n5. Point z to the right\n6. Rotate 360° about the z axis\n7. Press \'Stop Calibrating\'</string>
+    <string name="blank_percentage">"      %"</string>
+    <string name="oops">OOPS!</string>
+    <string name="WIP_Message">The page you\'re trying to reach is still a work in progress</string>
+    <string name="tap_anywhere_to_return">Tap anywhere to return</string>
+    <string name="therapy">Therapy</string>
+    <string name="stretching">Stretching</string>
+    <string name="choose_activity">Choose Activity</string>
+    <string name="home">HOME</string>
+    <string name="goniometer">Goniometer</string>
+    <string name="exit">Exit</string>
+    <string name="title_placeholder">title placeholder</string>
+    <string name="body_text_placeholder">body placeholder</string>
+    <string name="reps">Reps</string>
+    <string name="time">Time</string>
+    <string name="begin">Begin</string>
+    <string name="stop">Stop</string>
+    <string name="distance_display">Distance Display\n</string>
 </resources>

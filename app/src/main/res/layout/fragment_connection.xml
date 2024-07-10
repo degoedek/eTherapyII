@@ -80,7 +80,7 @@
                     android:layout_row="0"
                     android:layout_column="0"
                     android:paddingTop="2dp"
-                    android:text="      %"
+                    android:text="@string/blank_percentage"
                     android:textColor="@color/black"
                     android:background="@color/transGray"/>
 
@@ -110,7 +110,7 @@
                     android:layout_row="0"
                     android:layout_column="2"
                     android:paddingTop="2dp"
-                    android:text="      %"
+                    android:text="@string/blank_percentage"
                     android:textColor="@color/black"
                     android:background="@color/transGray"/>
 
