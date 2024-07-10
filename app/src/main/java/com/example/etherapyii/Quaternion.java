@@ -44,23 +44,6 @@ public class Quaternion {
         return (float) (2 * Math.acos(normalizedW) * 180 / Math.PI);
     }
 
-    public double[] getXAxis() {
-        return new double[]{
-                1 - 2 * (y * y + z * z),
-                2 * (x * y - w * z),
-                2 * (x * z + w * y)
-        };
-    }
-
-    // Method to extract the z-axis vector from a quaternion
-    public double[] getZAxis() {
-        return new double[]{
-                2 * (x * z + w * y),
-                2 * (y * z - w * x),
-                1 - 2 * (x * x + y * y)
-        };
-    }
-
     public static double angleBetween(Quaternion q1, Quaternion q2) {
         double dot = q1.dot(q2);
         double magnitudeProduct = q1.magnitude() * q2.magnitude();
