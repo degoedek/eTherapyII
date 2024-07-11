@@ -1,9 +1,9 @@
 package com.example.etherapyii;
 
-
 import static java.lang.Math.toRadians;
 import static java.lang.System.currentTimeMillis;
 
+import android.graphics.PointF;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
@@ -25,20 +25,17 @@ import android.widget.TextView;
 import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
 
-
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 public class TherapyMainFragment extends Fragment {
     private boolean positionChanged = false;
-    private boolean isClockRunning = false, started = false, repStarted = false;
+    private boolean isClockRunning = false, started = false;
     SharedViewModel viewModel;
     private String time;
     private Handler handler;
     private long startTime;
-    private CountDownTimer repCountdown;
     private Quaternion s1CurrentQuat, s2CurrentQuat, s1Pose, s2Pose, RelativeRotationPose, RelativeRotationCurrent;
     private Boolean posing = false, therapyActive = false;
     private int timeLeft;
@@ -58,7 +55,7 @@ public class TherapyMainFragment extends Fragment {
     });
     private Thread trackThread = new Thread(this::trackHold);
     private String intent = "pose";
-    private TextView distanceTV, HoldTV, poseDisplay, dataDisplay, s1AngularDifferenceTV, s2AngularDifferenceTV;
+    private TextView distanceTV, HoldTV;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
     private int HOLD_TIME, timeHeld;
     private View view;
@@ -152,8 +149,6 @@ public class TherapyMainFragment extends Fragment {
         // Button Listeners
         beginButton.setOnClickListener(view2 -> {
             if (!started) {
-
-
                 started = true;
                 startCountdown();
             }
@@ -166,9 +161,10 @@ public class TherapyMainFragment extends Fragment {
             S1PoseThread.interrupt();
             S2PoseThread.interrupt();
             trackThread.interrupt();
-            player.release();
-            player = null;
-
+            if (player != null) {
+                player.release();
+                player = null;
+            }
 
             Bundle bundle = new Bundle();
             // TODO: Add bundle extras here when needed
@@ -191,8 +187,6 @@ public class TherapyMainFragment extends Fragment {
         return view;
     }
 
-
-
     // Pose Countdown
     public void startCountdown() {
         long countdownTime = 6000; // This is the duration of pose
@@ -205,10 +199,8 @@ public class TherapyMainFragment extends Fragment {
                 countdownDuration[0] = l;
                 timeLeft = ((int) countdownDuration[0] + 100) / 1000;
 
-
                 String timeRemaining = "Pose\n" + timeLeft;
                 poseButton.setText(timeRemaining);
-
 
                 if (timeLeft == (countdownTime / 1000)) {
                     String tlString = "Time remaining: " + timeLeft + " - Start Sensor Fusion now";
@@ -235,13 +227,14 @@ public class TherapyMainFragment extends Fragment {
                 Log.i("TherapyMainFragment", "s1Pose Normalized: " + s1Pose);
                 s2Pose = s2PoseList.averageQuaternions();
                 s2Pose = normalize(s2Pose);
+                Log.i("TherapyMainFragment", "s2Pose Normalized: " + s2Pose);
+
 
                 s1PoseAngles = quaternionToEulerAngles(s1Pose, "zyx");
                 s2PoseAngles = quaternionToEulerAngles(s2Pose, "xyz");
 
                 Log.i("TherapyActivity", "S1 Pose Angles - X = " + s1PoseAngles[0] + " Y = " + s1PoseAngles[1] + " Z = " + s1PoseAngles[2]);
                 Log.i("TherapyActivity", "S2 Pose Angles - Z = " + s2PoseAngles[0] + " Y = " + s2PoseAngles[1] + " X = " + s2PoseAngles[2]);
-
 
                 // Start Clock
                 isClockRunning = true;
@@ -276,10 +269,7 @@ public class TherapyMainFragment extends Fragment {
                     distanceTV.setText(String.format("Current Angle:\n%.3f", currentDistance));
                     TextView repsTV = view.findViewById(R.id.repsTV);
 
-
-                    repsTV.setText(repsCompleted +"/"+reps);
-
-
+                    repsTV.setText(repsCompleted + "/" + reps);
 
                     handler.postDelayed(this, 500); // Update every half second
                 }
@@ -299,28 +289,6 @@ public class TherapyMainFragment extends Fragment {
         }
     }
 
-
-    private void updateCirclePosition(double[] s1Angles, double[] s2Angles) {
-        executorService.execute(() -> {
-            // Calculate the position difference based on angles
-            double dx = (s2Angles[1] - s1Angles[1]) * 100; // Pitch difference
-            double dy = (s2Angles[0] - s1Angles[0]) * 100; // Yaw difference
-
-            uiHandler.post(() -> {
-                // Update UI with new position
-                double newX = initialX + dx - (double) circleUserWithNotch.getWidth() / 2;
-                double newY = initialY + dy - (double) circleUserWithNotch.getHeight() / 2;
-
-                // Ensure the circles stay within the screen bounds
-                newX = Math.max(0, Math.min(newX, view.getWidth() - circleUserWithNotch.getWidth()));
-                newY = Math.max(0, Math.min(newY, view.getHeight() - circleUserWithNotch.getHeight()));
-
-                circleUserWithNotch.setX((float) newX);
-                circleUserWithNotch.setY((float) newY);
-            });
-        });
-    }
-
     public Quaternion multiplyQuat(Quaternion q1, Quaternion q2) {
         float w3, w2, w1, x3, x2, x1, y3, y2, y1, z3, z2, z1;
         w1 = q1.w();
@@ -333,22 +301,10 @@ public class TherapyMainFragment extends Fragment {
         y2 = q2.y();
         z2 = q2.z();
 
-        // TODO: Check this
         w3 = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;
         x3 = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;
         y3 = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
         z3 = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
-
-        /* From ChatGPT
-        public Quaternion multiply(Quaternion q) {
-            return new Quaternion(
-                w * q.w - x * q.x - y * q.y - z * q.z,
-                w * q.x + x * q.w + y * q.z - z * q.y,
-                w * q.y - x * q.z + y * q.w + z * q.x,
-                w * q.z + x * q.y - y * q.x + z * q.w
-            );
-        }
-         */
 
         return new Quaternion(w3, x3, y3, z3);
     }
@@ -379,68 +335,6 @@ public class TherapyMainFragment extends Fragment {
         return (float) (Math.acos(2 * dotProduct * dotProduct - 1) * (180 / 3.14159));
     }
 
-    public static float calculateRotationAngle(Quaternion q1, Quaternion q2) {
-        // Ensure q1 and q2 are unit quaternions
-        q1 = new Quaternion(q1.w() / q1.norm(), q1.x() / q1.norm(), q1.y() / q1.norm(), q1.z() / q1.norm());
-        q2 = new Quaternion(q2.w() / q2.norm(), q2.x() / q2.norm(), q2.y() / q2.norm(), q2.z() / q2.norm());
-
-        // Compute the relative rotation quaternion
-        Quaternion q1Conj = q1.conjugate();
-        Quaternion relativeQ = q1Conj.multiply(q2);
-
-        // Adjust to rotate the z-axis of sensor 2 to the x-axis of sensor 1
-        Quaternion additionalRotation = new Quaternion((float) Math.cos(Math.PI / 4), 0, 0, (float) Math.sin(Math.PI / 4));
-        Quaternion finalRotation = relativeQ.multiply(additionalRotation);
-
-        // Compute the rotation angle from the final rotation quaternion
-        return finalRotation.angle();
-    }
-
-
-    private static double[] normalize(double[] vector) {
-        double magnitude = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
-        return new double[]{vector[0] / magnitude, vector[1] / magnitude, vector[2] / magnitude};
-    }
-
-    // Method to calculate the dot product of two vectors
-    private static double dot(double[] v1, double[] v2) {
-        return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-    }
-
-    public static float calculateAngularDistance(Quaternion q1, Quaternion q2) {
-        // Transform q2 to align with q1's coordinate system
-        Quaternion rotationMapping = new Quaternion(0, 0, 1, 0); // This is a 90-degree rotation around the X axis
-        Quaternion transformedQ2 = q1.multiply(rotationMapping).multiply(q2);
-
-        // Find the difference quaternion between q1 and transformedQ2
-        Quaternion qDiff = transformedQ2.multiply(q1.conjugate());
-
-        // Calculate the angle of rotation represented by qDiff
-        double angle = 2 * Math.acos(Math.abs(qDiff.w()));
-
-        // Ensure the angle is between 0 and 2π
-        return (float) (angle <= Math.PI ? angle : 2 * Math.PI - angle) ;
-    }
-    public static float getAngularDistance(Quaternion q1, Quaternion q2) {
-        // Normalize quaternions
-        q1.norm();
-        q2.norm();
-
-        // Calculate the relative quaternion
-        Quaternion q1Conjugate = q1.conjugate();
-        Quaternion relativeQuaternion = q1Conjugate.multiply(q2);
-
-        // Calculate the angular distance
-        double angularDistance = Quaternion.angleBetween(new Quaternion(1, 0, 0, 0), relativeQuaternion);
-        return (float) (angularDistance * (180/Math.PI));
-    }
-
-    public static double angularDistance(Quaternion q1, Quaternion q2) {
-        q1 = applyCombinedRotation(q1);
-        double dotProduct = q1.w() * q2.w() + q1.x() * q2.x() + q1.y() * q2.y() + q1.z() * q2.z();
-        return (2 * Math.acos(Math.abs(dotProduct))) * (180 / Math.PI);
-    }
-
     public static Quaternion applyCombinedRotation(Quaternion inputQuaternion) {
         // Define the 90-degree rotation around the Y-axis and Z-axis in radians
         float angleY = (float) toRadians(90);
@@ -469,7 +363,6 @@ public class TherapyMainFragment extends Fragment {
         return new Quaternion(wSum / valueCounter, xSum / valueCounter, ySum / valueCounter, zSum / valueCounter);
     }
 
-
     public double[] threeAxisRotation(double r11, double r12, double r21, double r31, double r32) {
         double[] angles = new double[3];
 
@@ -484,7 +377,7 @@ public class TherapyMainFragment extends Fragment {
         if (q == null){
             return null;
         }
-        
+
         double[] rotations = new double[3];
 
         switch (seq) {
@@ -543,16 +436,12 @@ public class TherapyMainFragment extends Fragment {
         return rotations;
     }
 
-
-    //function to gather data from the wit motion sensors
-    //returns the data in the type of a float array where the first
+    // Function to gather data from the wit motion sensors
+    // Returns the data in the type of a float array where the first
     // four values are the first quaternion and the second four are
-    //the second quaternion from the sensors
+    // the second quaternion from the sensors
     float w, i, j, k;
     private synchronized float[] getDeviceData(Bwt901ble sensor) {
-
-
-
         if(sensor!=null){
             if(sensor.getDeviceData(WitSensorKey.Q0) != null) {
                 w = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q0));
@@ -563,19 +452,16 @@ public class TherapyMainFragment extends Fragment {
                 return null;
             }
         }
-
         return new float[]{w, i, j, k};
     }
 
-
-    //function to get the data in the type of Quaternion for the first sensor
+    // Function to get the data in the type of Quaternion for the first sensor
     private Quaternion dataToQuaternion(float[] data){
         if(data == null){
             return null;
         }
         return new Quaternion(data[0], data[1], data[2], data[3]);
     }
-
 
     private void sensorFusion(int sensorNum) {
         try {
@@ -612,8 +498,8 @@ public class TherapyMainFragment extends Fragment {
 
                             currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
 
-                            s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
-                            s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
+                            // Update the UI with the new circle positions
+//                            updateCirclePosition();
                         }
                         break;
                 }
@@ -623,6 +509,43 @@ public class TherapyMainFragment extends Fragment {
             Log.e("TherapyActivity", "Sensor Fusion interrupted", e);
         }
     }
+
+    private PointF initialCirclePosition(ImageView circle, Quaternion q, boolean isRedSensor) {
+        if (q != null) {
+            PointF position;
+
+            position = quaternionTo2D(q, isRedSensor);
+
+
+            return position;
+        } else {
+            Log.e("initialCirclePosition", "Error: Quaternion null");
+            return null;
+        }
+    }
+
+    private void updateCirclePosition() {
+        if (RelativeRotationCurrent != null) {
+            PointF redPosition = quaternionTo2D(s1CurrentQuat, true);
+            PointF bluePosition = quaternionTo2D(s2CurrentQuat, false);
+
+            // Convert the normalized position to screen coordinates
+            float screenXRed = initialX + redPosition.x * 100; // Adjust the multiplier as needed
+            float screenYRed = initialY + redPosition.y * 100; // Adjust the multiplier as needed
+
+            float screenXBlue = initialX + bluePosition.x * 100; // Adjust the multiplier as needed
+            float screenYBlue = initialY + bluePosition.y * 100; // Adjust the multiplier as needed
+
+            uiHandler.post(() -> {
+                circleUserWithNotch.setX(screenXRed);
+                circleUserWithNotch.setY(screenYRed);
+                // Update the goal circle or other UI elements as needed
+                circleGoalWithNotch.setX(screenXBlue);
+                circleGoalWithNotch.setY(screenYBlue);
+            });
+        }
+    }
+
 
 
     public double optimalAngularDifference(double pose, double current) {
@@ -636,6 +559,7 @@ public class TherapyMainFragment extends Fragment {
 
         return result;
     }
+
     private void updateHoldTimer(long startTime) {
         long elapsedMillis = System.currentTimeMillis() - startTime;
         int seconds = (int) (elapsedMillis / 1000);
@@ -695,7 +619,7 @@ public class TherapyMainFragment extends Fragment {
                                 }
 
                                 postUpdateHoldTextView(""); // Clear the hold text
-                                Thread.sleep(3 * 1000);
+                                Thread.sleep(2 * 1000);
                             }
                         }
                     } else {
@@ -720,11 +644,24 @@ public class TherapyMainFragment extends Fragment {
         uiHandler.post(() -> HoldTV.setText(text));
     }
 
+    private synchronized PointF quaternionTo2D(Quaternion q, boolean isRedSensor) {
+        // TODO: FIX
+        // Red sensor must be connected first for this to work
+        float x, y;
+
+        if (isRedSensor) {
+            // For red sensor: Use y (i) and z (k) components
+            y = (float) Math.asin(q.y() / Math.sqrt(q.w() * q.w() + q.y() * q.y()));
+            x = (float) -(Math.asin(q.z() / Math.sqrt(q.w() * q.w() + q.z() * q.z())));
+        } else { // TODO: Fix
+            // For blue sensor: Use x (i) and y (j) components
+            x = (float) -(Math.asin(q.x() / Math.sqrt(q.w() * q.w() + q.x() * q.x())));
+            y = (float) -(Math.asin(q.y() / Math.sqrt(q.w() * q.w() + q.y() * q.y())));
+        }
+
+        Log.i("QuaternionTo2D", "Quaternion: " + q + " -> PointF: x=" + x + ", y=" + y);
+        return new PointF(x, y);
+    }
 
 }
-
-
-
-
-
 
