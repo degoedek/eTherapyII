@@ -191,7 +191,7 @@
                 android:textSize="25sp"
                 android:backgroundTint="@color/orange"
                 android:textColor="@color/white"
-                android:visibility="visible"/>
+                android:visibility="invisible"/>
 
 
             <TextView

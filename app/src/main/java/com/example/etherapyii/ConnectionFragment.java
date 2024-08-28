@@ -226,6 +226,11 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
                 Log.i("ConnectionFragment", "EROROROROROOROOROROROORORORORO");
             }
         }
+
+        // Make the next button visible
+        if (bwt901bleList.size() == 2) {
+            next.setVisibility(View.VISIBLE);
+        }
     }
 
     // Required blank method
