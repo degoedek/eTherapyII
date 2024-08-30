@@ -4,6 +4,7 @@ package com.example.etherapyii;
 import static java.lang.Math.toRadians;
 import static java.lang.System.currentTimeMillis;
 
+import android.app.AlertDialog;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
@@ -159,30 +160,35 @@ public class TherapyMainFragment extends Fragment {
             }
         });
 
-        stopButton.setOnClickListener(view2 -> {
-            isClockRunning = false;
-            therapyActive = false;
-            destroyed = true;
-            S1PoseThread.interrupt();
-            S2PoseThread.interrupt();
-            trackThread.interrupt();
-            player.release();
-            player = null;
+    // TODO: DELETE ONCE POPUP IS FINISHED
 
+//        stopButton.setOnClickListener(view2 -> {
+//            isClockRunning = false;
+//            therapyActive = false;
+//            destroyed = true;
+//            S1PoseThread.interrupt();
+//            S2PoseThread.interrupt();
+//            trackThread.interrupt();
+//            player.release();
+//            player = null;
+//
+//            // TODO: Create a pop-up that says either congrats
+//            Bundle bundle = new Bundle();
+//            // TODO: Add bundle extras here when needed
+//
+//            // Create the new fragment and set the bundle as its arguments
+//            SummaryFragment summaryFragment = new SummaryFragment();
+//            summaryFragment.setArguments(bundle);
+//
+//            // Replace the current fragment with the new one
+//            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+//            transaction.replace(R.id.therapyContainer, summaryFragment);
+//            transaction.addToBackStack(null);
+//            transaction.commit();
+//        });
 
-            Bundle bundle = new Bundle();
-            // TODO: Add bundle extras here when needed
-
-            // Create the new fragment and set the bundle as its arguments
-            SummaryFragment summaryFragment = new SummaryFragment();
-            summaryFragment.setArguments(bundle);
-
-            // Replace the current fragment with the new one
-            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-            transaction.replace(R.id.therapyContainer, summaryFragment);
-            transaction.addToBackStack(null);
-            transaction.commit();
-        });
+        // inflate completion screen
+        completionScreenInflater();
 
         // Allows sensor fusion to run
         destroyed = false;
@@ -191,7 +197,16 @@ public class TherapyMainFragment extends Fragment {
         return view;
     }
 
+    // TODO: Complete
+    public void completionScreenInflater() {
+        // Variable Declarations
+        AlertDialog completionScreen;
+        Button stop = view.findViewById(R.id.btn_stop);
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+
+
+    }
 
     // Pose Countdown
     public void startCountdown() {

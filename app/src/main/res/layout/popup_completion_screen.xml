@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#2a7323">
+
+        <ImageView
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/green_fire_icon"
+            />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Good Work"
+            android:textSize="36sp"
+            android:fontFamily="@font/quicksand_regular"
+            android:textColor="@color/white"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#74c67a"
+        android:orientation="vertical"
+        android:paddingTop="25dp"
+        android:paddingBottom="15dp"
+        >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reps Completed:"
+                android:textSize="22dp"
+                android:paddingTop="5dp"
+                android:paddingLeft="10dp"
+                android:textColor="#2a7323"
+                android:layout_gravity="center"
+                android:fontFamily="@font/quicksand_regular"
+                />
+
+            <TextView
+                android:id="@+id/repDisplay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="C/G"
+                android:textSize="30sp"
+                android:paddingLeft="43dp"
+                android:layout_gravity="center"
+                android:textColor="#2a7323"
+                />
+
+        </LinearLayout>
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="50dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Exercise Duration:"
+                android:textSize="22sp"
+                android:paddingTop="5dp"
+                android:paddingLeft="10dp"
+                android:textColor="#2a7323"
+                android:layout_gravity="center"
+                android:fontFamily="@font/quicksand_regular"
+                />
+
+            <TextView
+                android:id="@+id/durationDisplay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00"
+                android:textSize="25sp"
+                android:paddingLeft="25dp"
+                android:layout_gravity="center"
+                android:textColor="#2a7323"
+                />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/continueButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Continue"
+            android:textSize="30sp"
+            android:backgroundTint="#2a7323"
+            android:fontFamily="@font/quicksand_regular"
+            />
+    </LinearLayout>
+
+
+
+</LinearLayout>
