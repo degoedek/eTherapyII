@@ -27,6 +27,8 @@ import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
 
 
+import org.w3c.dom.Text;
+
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -207,7 +209,10 @@ public class TherapyMainFragment extends Fragment {
         builder.setCancelable(false);
         View view2 = getLayoutInflater().inflate(R.layout.popup_completion_screen, null);
 
+        // Items in view2
         Button continueButton = view2.findViewById(R.id.continueButton);
+        TextView repsDisplay = view2.findViewById(R.id.repDisplay);
+        TextView durationDisplay = view2.findViewById(R.id.durationDisplay);
 
         builder.setView(view2);
         completionScreen = builder.create();
@@ -216,6 +221,16 @@ public class TherapyMainFragment extends Fragment {
             // TODO: Stop timer and exercise so that more reps cannot be obtained
             // TODO: Update reps display and total time
 
+            // Stop everything
+            started = false;
+            therapyActive = false;
+            isClockRunning = false;
+
+            // Update Statistic TextViews
+            // Use time variable and repscompleted / reps
+            String repsString = repsCompleted + "/" + reps;
+            repsDisplay.setText(repsString);
+            durationDisplay.setText(time);
         });
 
         continueButton.setOnClickListener(view -> {
@@ -670,18 +685,6 @@ public class TherapyMainFragment extends Fragment {
         }
     }
 
-
-    public double optimalAngularDifference(double pose, double current) {
-        double result;
-
-        result = Math.abs(pose) + Math.abs(current);
-
-        if (result > 180) {
-            result = 360 - result;
-        }
-
-        return result;
-    }
     private void updateHoldTimer(long startTime) {
         long elapsedMillis = System.currentTimeMillis() - startTime;
         int seconds = (int) (elapsedMillis / 1000);
@@ -707,7 +710,7 @@ public class TherapyMainFragment extends Fragment {
         double DISTANCE_CHANGE_THRESHOLD = 1.25 * ACCURACY_THRESHOLD;
 
         try {
-            while (true) { // Use a condition to exit the loop
+            while (started) { // Use a condition to exit the loop
                 if (currentDistance >= DISTANCE_CHANGE_THRESHOLD) {
                     positionChanged = true;
                     posed = false;
