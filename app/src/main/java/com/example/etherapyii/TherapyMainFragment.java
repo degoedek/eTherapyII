@@ -204,6 +204,37 @@ public class TherapyMainFragment extends Fragment {
         Button stop = view.findViewById(R.id.btn_stop);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+        builder.setCancelable(false);
+        View view2 = getLayoutInflater().inflate(R.layout.popup_completion_screen, null);
+
+        Button continueButton = view2.findViewById(R.id.continueButton);
+
+        builder.setView(view2);
+        completionScreen = builder.create();
+        stop.setOnClickListener(view -> {
+            completionScreen.show();
+            // TODO: Stop timer and exercise so that more reps cannot be obtained
+            // TODO: Update reps display and total time
+
+        });
+
+        continueButton.setOnClickListener(view -> {
+            // TODO: Progress to the next page - still needs tested
+            completionScreen.dismiss();
+
+            Bundle bundle = new Bundle();
+            // TODO: Add bundle extras here when needed
+
+            // Create the new fragment and set the bundle as its arguments
+            SummaryFragment summaryFragment = new SummaryFragment();
+            summaryFragment.setArguments(bundle);
+
+            // Replace the current fragment with the new one
+            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+            transaction.replace(R.id.therapyContainer, summaryFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        });
 
 
     }
