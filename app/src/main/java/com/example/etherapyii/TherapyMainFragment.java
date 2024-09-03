@@ -162,33 +162,6 @@ public class TherapyMainFragment extends Fragment {
             }
         });
 
-    // TODO: DELETE ONCE POPUP IS FINISHED
-
-//        stopButton.setOnClickListener(view2 -> {
-//            isClockRunning = false;
-//            therapyActive = false;
-//            destroyed = true;
-//            S1PoseThread.interrupt();
-//            S2PoseThread.interrupt();
-//            trackThread.interrupt();
-//            player.release();
-//            player = null;
-//
-//            // TODO: Create a pop-up that says either congrats
-//            Bundle bundle = new Bundle();
-//            // TODO: Add bundle extras here when needed
-//
-//            // Create the new fragment and set the bundle as its arguments
-//            SummaryFragment summaryFragment = new SummaryFragment();
-//            summaryFragment.setArguments(bundle);
-//
-//            // Replace the current fragment with the new one
-//            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-//            transaction.replace(R.id.therapyContainer, summaryFragment);
-//            transaction.addToBackStack(null);
-//            transaction.commit();
-//        });
-
         // inflate completion screen
         completionScreenInflater();
 
