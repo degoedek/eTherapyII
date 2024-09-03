@@ -4,6 +4,7 @@ package com.example.etherapyii;
 import static java.lang.Math.toRadians;
 import static java.lang.System.currentTimeMillis;
 
+import android.app.AlertDialog;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
@@ -25,6 +26,8 @@ import android.widget.TextView;
 import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
 
+
+import org.w3c.dom.Text;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -159,16 +162,80 @@ public class TherapyMainFragment extends Fragment {
             }
         });
 
-        stopButton.setOnClickListener(view2 -> {
-            isClockRunning = false;
-            therapyActive = false;
-            destroyed = true;
-            S1PoseThread.interrupt();
-            S2PoseThread.interrupt();
-            trackThread.interrupt();
-            player.release();
-            player = null;
+    // TODO: DELETE ONCE POPUP IS FINISHED
 
+//        stopButton.setOnClickListener(view2 -> {
+//            isClockRunning = false;
+//            therapyActive = false;
+//            destroyed = true;
+//            S1PoseThread.interrupt();
+//            S2PoseThread.interrupt();
+//            trackThread.interrupt();
+//            player.release();
+//            player = null;
+//
+//            // TODO: Create a pop-up that says either congrats
+//            Bundle bundle = new Bundle();
+//            // TODO: Add bundle extras here when needed
+//
+//            // Create the new fragment and set the bundle as its arguments
+//            SummaryFragment summaryFragment = new SummaryFragment();
+//            summaryFragment.setArguments(bundle);
+//
+//            // Replace the current fragment with the new one
+//            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+//            transaction.replace(R.id.therapyContainer, summaryFragment);
+//            transaction.addToBackStack(null);
+//            transaction.commit();
+//        });
+
+        // inflate completion screen
+        completionScreenInflater();
+
+        // Allows sensor fusion to run
+        destroyed = false;
+
+        // Inflate the layout for this fragment
+        return view;
+    }
+
+    // TODO: Complete
+    public void completionScreenInflater() {
+        // Variable Declarations
+        AlertDialog completionScreen;
+        Button stop = view.findViewById(R.id.btn_stop);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+        builder.setCancelable(false);
+        View view2 = getLayoutInflater().inflate(R.layout.popup_completion_screen, null);
+
+        // Items in view2
+        Button continueButton = view2.findViewById(R.id.continueButton);
+        TextView repsDisplay = view2.findViewById(R.id.repDisplay);
+        TextView durationDisplay = view2.findViewById(R.id.durationDisplay);
+
+        builder.setView(view2);
+        completionScreen = builder.create();
+        stop.setOnClickListener(view -> {
+            completionScreen.show();
+            // TODO: Stop timer and exercise so that more reps cannot be obtained
+            // TODO: Update reps display and total time
+
+            // Stop everything
+            started = false;
+            therapyActive = false;
+            isClockRunning = false;
+
+            // Update Statistic TextViews
+            // Use time variable and repscompleted / reps
+            String repsString = repsCompleted + "/" + reps;
+            repsDisplay.setText(repsString);
+            durationDisplay.setText(time);
+        });
+
+        continueButton.setOnClickListener(view -> {
+            // TODO: Progress to the next page - still needs tested
+            completionScreen.dismiss();
 
             Bundle bundle = new Bundle();
             // TODO: Add bundle extras here when needed
@@ -184,14 +251,8 @@ public class TherapyMainFragment extends Fragment {
             transaction.commit();
         });
 
-        // Allows sensor fusion to run
-        destroyed = false;
 
-        // Inflate the layout for this fragment
-        return view;
     }
-
-
 
     // Pose Countdown
     public void startCountdown() {
@@ -624,18 +685,6 @@ public class TherapyMainFragment extends Fragment {
         }
     }
 
-
-    public double optimalAngularDifference(double pose, double current) {
-        double result;
-
-        result = Math.abs(pose) + Math.abs(current);
-
-        if (result > 180) {
-            result = 360 - result;
-        }
-
-        return result;
-    }
     private void updateHoldTimer(long startTime) {
         long elapsedMillis = System.currentTimeMillis() - startTime;
         int seconds = (int) (elapsedMillis / 1000);
@@ -661,7 +710,7 @@ public class TherapyMainFragment extends Fragment {
         double DISTANCE_CHANGE_THRESHOLD = 1.25 * ACCURACY_THRESHOLD;
 
         try {
-            while (true) { // Use a condition to exit the loop
+            while (started) { // Use a condition to exit the loop
                 if (currentDistance >= DISTANCE_CHANGE_THRESHOLD) {
                     positionChanged = true;
                     posed = false;
