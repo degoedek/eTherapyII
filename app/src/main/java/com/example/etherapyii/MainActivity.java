@@ -31,9 +31,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        if (checkPermissions()) {
-            // Permissions are already granted, proceed with Bluetooth operations
-        } else {
+        if (!checkPermissions()) {
             requestPermissions();
         }
 
@@ -67,9 +65,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
             }
-            if (allGranted) {
-                // All permissions are granted, proceed with Bluetooth operations
-            } else {
+            if (!allGranted) {
                 requestPermissions();
                 Toast.makeText(this, "Bluetooth permissions are required to use this feature.", Toast.LENGTH_SHORT).show();
             }

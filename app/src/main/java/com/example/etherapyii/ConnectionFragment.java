@@ -92,7 +92,7 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
             // Initialize the Bluetooth manager, here will apply for Bluetooth permissions
             WitBluetoothManager.initInstance(getActivity());
         } catch (Exception e) {
-            Log.e("", Objects.requireNonNull(e.getMessage()));
+            Log.e("BTCheck1", Objects.requireNonNull(e.getMessage()));
             e.printStackTrace();
         }
 
@@ -100,6 +100,16 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
         connect.setOnClickListener(view2 -> {
             Thread connectThread = new Thread(() -> {
                 Log.i("ConnectionPage", "Connect thread started");
+
+                // Re-attempting to initialize bluetooth manager - only necessary on the very first app usage
+                try {
+                    WitBluetoothManager.requestPermissions(getActivity());
+                    // Initialize the Bluetooth manager, here will apply for Bluetooth permissions
+                    WitBluetoothManager.initInstance(getActivity());
+                } catch (Exception e) {
+                    Log.e("BTCheck2", Objects.requireNonNull(e.getMessage()));
+                    e.printStackTrace();
+                }
 
                 startDiscovery();
             });
