@@ -51,6 +51,8 @@ public class TherapyMainFragment extends Fragment {
     private float ACCURACY_THRESHOLD;
     private Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     private Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
+    private DoublyLinkedList s1AngleAverages = new DoublyLinkedList();
+    private DoublyLinkedList s2AngleAverages = new DoublyLinkedList();
     private int s1Index = 0, s2Index = 0;
     private float currentDistance;
     private Thread S1PoseThread = new Thread(() -> {
@@ -61,9 +63,9 @@ public class TherapyMainFragment extends Fragment {
     });
     private Thread trackThread = new Thread(this::trackHold);
     private String intent = "pose";
-    private TextView distanceTV, HoldTV, poseDisplay, dataDisplay, s1AngularDifferenceTV, s2AngularDifferenceTV;
+    private TextView distanceTV, HoldTV;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
-    private int HOLD_TIME, timeHeld;
+    private int HOLD_TIME;
     private View view;
     private Handler uiHandler = new Handler();
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -629,13 +631,15 @@ public class TherapyMainFragment extends Fragment {
                             if (sensorNum == 1) {
                                 s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
                                 s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+                                s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
+                                s1AngleAverages.insert(s1CurrentQuat);
                             } else {
                                 s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
                                 s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+                                s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
+                                s2AngleAverages.insert(s2CurrentQuat);
                             }
 
-                            s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
-                            s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
 
                             RelativeRotationPose = findRelativeRotation(s1Pose, s2Pose);
                             RelativeRotationCurrent = findRelativeRotation(s1CurrentQuat, s2CurrentQuat);
