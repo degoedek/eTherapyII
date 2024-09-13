@@ -172,7 +172,6 @@ public class TherapyMainFragment extends Fragment {
         return view;
     }
 
-    // TODO: Complete
     public void completionScreenInflater() {
         // Variable Declarations
         AlertDialog completionScreen;
@@ -191,8 +190,6 @@ public class TherapyMainFragment extends Fragment {
         completionScreen = builder.create();
         stop.setOnClickListener(view -> {
             completionScreen.show();
-            // TODO: Stop timer and exercise so that more reps cannot be obtained
-            // TODO: Update reps display and total time
 
             // Stop everything
             started = false;
@@ -207,11 +204,10 @@ public class TherapyMainFragment extends Fragment {
         });
 
         continueButton.setOnClickListener(view -> {
-            // TODO: Progress to the next page - still needs tested
             completionScreen.dismiss();
 
             Bundle bundle = new Bundle();
-            // TODO: Add bundle extras here when needed
+            // Add any extras here
 
             // Create the new fragment and set the bundle as its arguments
             SummaryFragment summaryFragment = new SummaryFragment();
