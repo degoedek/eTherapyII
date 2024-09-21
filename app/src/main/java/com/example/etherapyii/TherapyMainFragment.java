@@ -13,6 +13,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -27,8 +28,11 @@ import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
 
 
-import org.w3c.dom.Text;
-
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,6 +57,7 @@ public class TherapyMainFragment extends Fragment {
     private Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     private DoublyLinkedList s1AngleAverages = new DoublyLinkedList();
     private DoublyLinkedList s2AngleAverages = new DoublyLinkedList();
+    private GenericDoublyLinkedList<Float> distanceList = new GenericDoublyLinkedList<>();
     private int s1Index = 0, s2Index = 0;
     private float currentDistance;
     private Thread S1PoseThread = new Thread(() -> {
@@ -110,7 +115,6 @@ public class TherapyMainFragment extends Fragment {
         TextView repsTV = view.findViewById(R.id.repsTV);
         TextView timeTV = view.findViewById(R.id.timeTV);
         Button beginButton = view.findViewById(R.id.beginButton);
-        Button stopButton = view.findViewById(R.id.btn_stop);
         HoldTV = view.findViewById(R.id.HoldTV);
         circleUserWithNotch = view.findViewById(R.id.circle_user_with_notch);
         circleGoalWithNotch = view.findViewById(R.id.circle_goal_with_notch);
@@ -191,6 +195,10 @@ public class TherapyMainFragment extends Fragment {
         builder.setView(view2);
         completionScreen = builder.create();
         stop.setOnClickListener(view -> {
+            // Export data to csv
+            exportDataToCSV();
+
+            // Display Completion Screen
             completionScreen.show();
 
             // Stop everything
@@ -645,6 +653,8 @@ public class TherapyMainFragment extends Fragment {
                             RelativeRotationCurrent = findRelativeRotation(s1CurrentQuat, s2CurrentQuat);
 
                             currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
+                            distanceList.insert(currentDistance);
+
 
                             s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
                             s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
@@ -740,6 +750,50 @@ public class TherapyMainFragment extends Fragment {
 
     private void postUpdateHoldTextView(String text) {
         uiHandler.post(() -> HoldTV.setText(text));
+    }
+
+    private void exportDataToCSV() {
+        Date currentDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy-HH-mm-ss");
+        String dateString = dateFormat.format(currentDate);
+        String fileName = "HOTT_" + dateString + ".csv";
+        File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        String filePath = directory + File.separator + fileName;
+
+        try {
+            File csvFile = new File(filePath);
+            FileWriter writer = new FileWriter(csvFile);
+
+            GenericNode<Float> initialNode = distanceList.removeFront();
+            Long initialTime = initialNode.time;
+            GenericNode<Float> cur = initialNode;
+
+            // LinkedList Check
+            Log.i("LinkedList Head Data", "InitialTime: " + initialTime + " - InitialDistance: " + cur.data);
+
+            writer.append("Time");
+            writer.append(",");
+            writer.append("Distance");
+            writer.append("\n");
+
+            int whileCount = 0;
+            while (!distanceList.isEmpty()) {
+                Log.i("CSVExport", "While entered " + whileCount++);
+                cur = distanceList.removeFront();
+                writer.append(String.format("%.2f", (double) (cur.time - initialTime) / 1000));
+                writer.append(",");
+                writer.append(Float.toString(cur.data));
+                writer.append("\n");
+            }
+
+            writer.close();
+            Log.i("CSVExport", "Distance CSV successfully exported to: " + filePath + " - File Name is: " + fileName);
+
+        } catch (IOException e) {
+            Log.e("CSVExport", "Error exporting data to CSV file.");
+            throw new RuntimeException(e);
+        }
+
     }
 
 
