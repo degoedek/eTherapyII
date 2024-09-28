@@ -84,6 +84,7 @@ public class TherapyMainFragment extends Fragment {
     int reps, repsCompleted = 0;
     MediaPlayer player;
     boolean repsCompletedB = false;
+    boolean holdStarted = false, posed = true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -107,7 +108,7 @@ public class TherapyMainFragment extends Fragment {
             // Update the UI with the new sensor data
             sensor2 = newSensor;
             // Example: Log the sensor data
-            Log.d("SensorFragment", "Sensor1 received: " + sensor2);
+            Log.d("SensorFragment", "Sensor2 received: " + sensor2);
         });
 
         // Variable Declaration
@@ -195,7 +196,7 @@ public class TherapyMainFragment extends Fragment {
         builder.setView(view2);
         completionScreen = builder.create();
         stop.setOnClickListener(view -> {
-            // Export data to csv
+            // Export data to csv TODO: Link this to a button on popup
             exportDataToCSV();
 
             // Display Completion Screen
@@ -653,7 +654,7 @@ public class TherapyMainFragment extends Fragment {
                             RelativeRotationCurrent = findRelativeRotation(s1CurrentQuat, s2CurrentQuat);
 
                             currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
-                            distanceList.insert(currentDistance);
+                            distanceList.insert(currentDistance, s1CurrentQuat, s2CurrentQuat, repsCompleted, holdStarted);
 
 
                             s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
@@ -689,7 +690,6 @@ public class TherapyMainFragment extends Fragment {
         Log.i("TherapyActivity", "Track Hold running");
 
         long startTime = System.currentTimeMillis();
-        boolean holdStarted = false, posed = true;
         double DISTANCE_CHANGE_THRESHOLD = 1.25 * ACCURACY_THRESHOLD;
 
         try {
@@ -754,11 +754,12 @@ public class TherapyMainFragment extends Fragment {
 
     private void exportDataToCSV() {
         Date currentDate = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy-HH-mm-ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy-HH:mm");
         String dateString = dateFormat.format(currentDate);
         String fileName = "HOTT_" + dateString + ".csv";
-        File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File directory = requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         String filePath = directory + File.separator + fileName;
+        Log.i("FilePath", filePath);
 
         try {
             File csvFile = new File(filePath);
@@ -771,19 +772,39 @@ public class TherapyMainFragment extends Fragment {
             // LinkedList Check
             Log.i("LinkedList Head Data", "InitialTime: " + initialTime + " - InitialDistance: " + cur.data);
 
+            // Column Labels
             writer.append("Time");
             writer.append(",");
             writer.append("Distance");
+            writer.append(",");
+            writer.append("Sensor 1 Quaternion");
+            writer.append(",");
+            writer.append("Sensor 2 Quaternion");
+            writer.append(",");
+            writer.append("Rep Number");
+            writer.append(",");
+            writer.append("In range?");
             writer.append("\n");
 
             int whileCount = 0;
             while (!distanceList.isEmpty()) {
-                Log.i("CSVExport", "While entered " + whileCount++);
                 cur = distanceList.removeFront();
-                writer.append(String.format("%.2f", (double) (cur.time - initialTime) / 1000));
-                writer.append(",");
-                writer.append(Float.toString(cur.data));
-                writer.append("\n");
+
+                // Fixes weird issue where certain data points had negative time
+                if (-(initialTime - cur.time) / 1000.0 > 0) {
+                    writer.append(String.format("%.2f", -(initialTime - cur.time) / 1000.0));
+                    writer.append(",");
+                    writer.append(Float.toString(cur.data));
+                    writer.append(",");
+                    writer.append(cur.s1Q.toString());
+                    writer.append(",");
+                    writer.append(cur.s2Q.toString());
+                    writer.append(",");
+                    writer.append(String.valueOf(cur.repNum));
+                    writer.append(",");
+                    writer.append(Boolean.toString(cur.acquired));
+                    writer.append("\n");
+                }
             }
 
             writer.close();

@@ -5,21 +5,21 @@ public class GenericDoublyLinkedList<T> {
     private int size;
 
     public GenericDoublyLinkedList() {
-        head = new GenericNode<>(null);
+        head = new GenericNode<>(null, null, null, 0, null);
         head.next = head;
         head.prev = head;
         size = 0;
     }
 
-    public void insert(T data) {
+    public void insert(T data, Quaternion s1Q, Quaternion s2Q, int repNum, Boolean acquired) {
         if(data == null){
             return;
         }
-        GenericNode<T> newNode = new GenericNode<>(data);
-        newNode.prev = head;
-        newNode.next = head.next;
-        head.next.prev = newNode;
-        head.next = newNode;
+        GenericNode<T> newNode = new GenericNode<>(data, s1Q, s2Q, repNum, acquired);
+        newNode.next = head;
+        newNode.prev = head.prev;
+        head.prev.next = newNode;
+        head.prev = newNode;
         size++;
     }
 
