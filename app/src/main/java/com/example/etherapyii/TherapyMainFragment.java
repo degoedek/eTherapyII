@@ -23,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
@@ -189,16 +190,14 @@ public class TherapyMainFragment extends Fragment {
         View view2 = getLayoutInflater().inflate(R.layout.popup_completion_screen, null);
 
         // Items in view2
-        Button continueButton = view2.findViewById(R.id.continueButton);
         TextView repsDisplay = view2.findViewById(R.id.repDisplay);
         TextView durationDisplay = view2.findViewById(R.id.durationDisplay);
+        Button exportButton = view2.findViewById(R.id.exportButton);
+        Button continueButton = view2.findViewById(R.id.continueButton);
 
         builder.setView(view2);
         completionScreen = builder.create();
         stop.setOnClickListener(view -> {
-            // Export data to csv TODO: Link this to a button on popup
-            exportDataToCSV();
-
             // Display Completion Screen
             completionScreen.show();
 
@@ -212,6 +211,17 @@ public class TherapyMainFragment extends Fragment {
             String repsString = repsCompleted + "/" + reps;
             repsDisplay.setText(repsString);
             durationDisplay.setText(time);
+        });
+
+        exportButton.setOnClickListener(view -> {
+            String path;
+            path = exportDataToCSV();
+            if (path != null) {
+                Toast.makeText(getContext(), "Path: " + path, Toast.LENGTH_LONG).show();
+                exportButton.setVisibility(View.INVISIBLE);
+            } else {
+                Toast.makeText(getContext(), "Data Export Failed", Toast.LENGTH_SHORT).show();
+            }
         });
 
         continueButton.setOnClickListener(view -> {
@@ -752,9 +762,9 @@ public class TherapyMainFragment extends Fragment {
         uiHandler.post(() -> HoldTV.setText(text));
     }
 
-    private void exportDataToCSV() {
+    private String exportDataToCSV() {
         Date currentDate = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy-HH:mm");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy-HH-mm");
         String dateString = dateFormat.format(currentDate);
         String fileName = "HOTT_" + dateString + ".csv";
         File directory = requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
@@ -809,6 +819,7 @@ public class TherapyMainFragment extends Fragment {
 
             writer.close();
             Log.i("CSVExport", "Distance CSV successfully exported to: " + filePath + " - File Name is: " + fileName);
+            return filePath;
 
         } catch (IOException e) {
             Log.e("CSVExport", "Error exporting data to CSV file.");
