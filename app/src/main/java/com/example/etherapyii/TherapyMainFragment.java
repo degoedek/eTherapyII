@@ -217,7 +217,13 @@ public class TherapyMainFragment extends Fragment {
             String path;
             path = exportDataToCSV();
             if (path != null) {
-                Toast.makeText(getContext(), "Path: " + path, Toast.LENGTH_LONG).show();
+                // TODO: Find a better way to instruct on getting the csv
+                // 1. Connect phone to laptop through USB-C
+                // 2. Give permission (if requested on the phone and/or laptop) to view files
+                // 3. Open file explorer and navigate to the phones files
+                // 4. Open 'Internal Storage' --> 'Android' --> 'Data' --> 'com.example.etherapyii' --> 'files' --> 'documents'
+                // 5. Select file with desired exercise, date, and time
+//                Toast.makeText(getContext(), "Path: " + path, Toast.LENGTH_LONG).show();
                 exportButton.setVisibility(View.INVISIBLE);
             } else {
                 Toast.makeText(getContext(), "Data Export Failed", Toast.LENGTH_SHORT).show();
@@ -762,7 +768,7 @@ public class TherapyMainFragment extends Fragment {
         uiHandler.post(() -> HoldTV.setText(text));
     }
 
-    private String exportDataToCSV() {
+    private synchronized String exportDataToCSV() {
         Date currentDate = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy-HH-mm");
         String dateString = dateFormat.format(currentDate);
