@@ -13,6 +13,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -22,13 +23,17 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.wit.witsdk.modular.sensor.example.ble5.Bwt901ble;
 import com.wit.witsdk.modular.sensor.modular.processor.constant.WitSensorKey;
 
 
-import org.w3c.dom.Text;
-
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,6 +56,9 @@ public class TherapyMainFragment extends Fragment {
     private float ACCURACY_THRESHOLD;
     private Quaternion[] s1RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
     private Quaternion[] s2RunningAverage = new Quaternion[RUNNING_AVG_SIZE];
+    private DoublyLinkedList s1AngleAverages = new DoublyLinkedList();
+    private DoublyLinkedList s2AngleAverages = new DoublyLinkedList();
+    private GenericDoublyLinkedList<Float> distanceList = new GenericDoublyLinkedList<>();
     private int s1Index = 0, s2Index = 0;
     private float currentDistance;
     private Thread S1PoseThread = new Thread(() -> {
@@ -61,9 +69,9 @@ public class TherapyMainFragment extends Fragment {
     });
     private Thread trackThread = new Thread(this::trackHold);
     private String intent = "pose";
-    private TextView distanceTV, HoldTV, poseDisplay, dataDisplay, s1AngularDifferenceTV, s2AngularDifferenceTV;
+    private TextView distanceTV, HoldTV;
     private ImageView circleUserWithNotch, circleGoalWithNotch;
-    private int HOLD_TIME, timeHeld;
+    private int HOLD_TIME;
     private View view;
     private Handler uiHandler = new Handler();
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -77,6 +85,7 @@ public class TherapyMainFragment extends Fragment {
     int reps, repsCompleted = 0;
     MediaPlayer player;
     boolean repsCompletedB = false;
+    boolean holdStarted = false, posed = true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -100,7 +109,7 @@ public class TherapyMainFragment extends Fragment {
             // Update the UI with the new sensor data
             sensor2 = newSensor;
             // Example: Log the sensor data
-            Log.d("SensorFragment", "Sensor1 received: " + sensor2);
+            Log.d("SensorFragment", "Sensor2 received: " + sensor2);
         });
 
         // Variable Declaration
@@ -108,7 +117,6 @@ public class TherapyMainFragment extends Fragment {
         TextView repsTV = view.findViewById(R.id.repsTV);
         TextView timeTV = view.findViewById(R.id.timeTV);
         Button beginButton = view.findViewById(R.id.beginButton);
-        Button stopButton = view.findViewById(R.id.btn_stop);
         HoldTV = view.findViewById(R.id.HoldTV);
         circleUserWithNotch = view.findViewById(R.id.circle_user_with_notch);
         circleGoalWithNotch = view.findViewById(R.id.circle_goal_with_notch);
@@ -172,7 +180,6 @@ public class TherapyMainFragment extends Fragment {
         return view;
     }
 
-    // TODO: Complete
     public void completionScreenInflater() {
         // Variable Declarations
         AlertDialog completionScreen;
@@ -183,16 +190,16 @@ public class TherapyMainFragment extends Fragment {
         View view2 = getLayoutInflater().inflate(R.layout.popup_completion_screen, null);
 
         // Items in view2
-        Button continueButton = view2.findViewById(R.id.continueButton);
         TextView repsDisplay = view2.findViewById(R.id.repDisplay);
         TextView durationDisplay = view2.findViewById(R.id.durationDisplay);
+        Button exportButton = view2.findViewById(R.id.exportButton);
+        Button continueButton = view2.findViewById(R.id.continueButton);
 
         builder.setView(view2);
         completionScreen = builder.create();
         stop.setOnClickListener(view -> {
+            // Display Completion Screen
             completionScreen.show();
-            // TODO: Stop timer and exercise so that more reps cannot be obtained
-            // TODO: Update reps display and total time
 
             // Stop everything
             started = false;
@@ -206,12 +213,28 @@ public class TherapyMainFragment extends Fragment {
             durationDisplay.setText(time);
         });
 
+        exportButton.setOnClickListener(view -> {
+            String path;
+            path = exportDataToCSV();
+            if (path != null) {
+                // TODO: Find a better way to instruct on getting the csv
+                // 1. Connect phone to laptop through USB-C
+                // 2. Give permission (if requested on the phone and/or laptop) to view files
+                // 3. Open file explorer and navigate to the phones files
+                // 4. Open 'Internal Storage' --> 'Android' --> 'Data' --> 'com.example.etherapyii' --> 'files' --> 'documents'
+                // 5. Select file with desired exercise, date, and time
+//                Toast.makeText(getContext(), "Path: " + path, Toast.LENGTH_LONG).show();
+                exportButton.setVisibility(View.INVISIBLE);
+            } else {
+                Toast.makeText(getContext(), "Data Export Failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         continueButton.setOnClickListener(view -> {
-            // TODO: Progress to the next page - still needs tested
             completionScreen.dismiss();
 
             Bundle bundle = new Bundle();
-            // TODO: Add bundle extras here when needed
+            // Add any extras here
 
             // Create the new fragment and set the bundle as its arguments
             SummaryFragment summaryFragment = new SummaryFragment();
@@ -633,18 +656,22 @@ public class TherapyMainFragment extends Fragment {
                             if (sensorNum == 1) {
                                 s1RunningAverage[s1Index] = dataToQuaternion(getDeviceData(sensor1));
                                 s1Index = (s1Index + 1) % RUNNING_AVG_SIZE;
+                                s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
+                                s1AngleAverages.insert(s1CurrentQuat);
                             } else {
                                 s2RunningAverage[s2Index] = dataToQuaternion(getDeviceData(sensor2));
                                 s2Index = (s2Index + 1) % RUNNING_AVG_SIZE;
+                                s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
+                                s2AngleAverages.insert(s2CurrentQuat);
                             }
 
-                            s1CurrentQuat = avgQuaternionArray(s1RunningAverage);
-                            s2CurrentQuat = avgQuaternionArray(s2RunningAverage);
 
                             RelativeRotationPose = findRelativeRotation(s1Pose, s2Pose);
                             RelativeRotationCurrent = findRelativeRotation(s1CurrentQuat, s2CurrentQuat);
 
                             currentDistance = quaternionDistance(RelativeRotationPose, RelativeRotationCurrent);
+                            distanceList.insert(currentDistance, s1CurrentQuat, s2CurrentQuat, repsCompleted, holdStarted);
+
 
                             s1Angles = quaternionToEulerAngles(s1CurrentQuat, "zyx");
                             s2Angles = quaternionToEulerAngles(s2CurrentQuat, "xyz");
@@ -679,7 +706,6 @@ public class TherapyMainFragment extends Fragment {
         Log.i("TherapyActivity", "Track Hold running");
 
         long startTime = System.currentTimeMillis();
-        boolean holdStarted = false, posed = true;
         double DISTANCE_CHANGE_THRESHOLD = 1.25 * ACCURACY_THRESHOLD;
 
         try {
@@ -740,6 +766,72 @@ public class TherapyMainFragment extends Fragment {
 
     private void postUpdateHoldTextView(String text) {
         uiHandler.post(() -> HoldTV.setText(text));
+    }
+
+    private synchronized String exportDataToCSV() {
+        Date currentDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy-HH-mm");
+        String dateString = dateFormat.format(currentDate);
+        String fileName = "HOTT_" + dateString + ".csv";
+        File directory = requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        String filePath = directory + File.separator + fileName;
+        Log.i("FilePath", filePath);
+
+        try {
+            File csvFile = new File(filePath);
+            FileWriter writer = new FileWriter(csvFile);
+
+            GenericNode<Float> initialNode = distanceList.removeFront();
+            Long initialTime = initialNode.time;
+            GenericNode<Float> cur = initialNode;
+
+            // LinkedList Check
+            Log.i("LinkedList Head Data", "InitialTime: " + initialTime + " - InitialDistance: " + cur.data);
+
+            // Column Labels
+            writer.append("Time");
+            writer.append(",");
+            writer.append("Distance");
+            writer.append(",");
+            writer.append("Sensor 1 Quaternion");
+            writer.append(",");
+            writer.append("Sensor 2 Quaternion");
+            writer.append(",");
+            writer.append("Rep Number");
+            writer.append(",");
+            writer.append("In range?");
+            writer.append("\n");
+
+            int whileCount = 0;
+            while (!distanceList.isEmpty()) {
+                cur = distanceList.removeFront();
+
+                // Fixes weird issue where certain data points had negative time
+                if (-(initialTime - cur.time) / 1000.0 > 0) {
+                    writer.append(String.format("%.2f", -(initialTime - cur.time) / 1000.0));
+                    writer.append(",");
+                    writer.append(Float.toString(cur.data));
+                    writer.append(",");
+                    writer.append(cur.s1Q.toString());
+                    writer.append(",");
+                    writer.append(cur.s2Q.toString());
+                    writer.append(",");
+                    writer.append(String.valueOf(cur.repNum));
+                    writer.append(",");
+                    writer.append(Boolean.toString(cur.acquired));
+                    writer.append("\n");
+                }
+            }
+
+            writer.close();
+            Log.i("CSVExport", "Distance CSV successfully exported to: " + filePath + " - File Name is: " + fileName);
+            return filePath;
+
+        } catch (IOException e) {
+            Log.e("CSVExport", "Error exporting data to CSV file.");
+            throw new RuntimeException(e);
+        }
+
     }
 
 
