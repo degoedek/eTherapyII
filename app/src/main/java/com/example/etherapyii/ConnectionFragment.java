@@ -88,7 +88,7 @@ public class ConnectionFragment extends Fragment implements IBluetoothFoundObser
         therapy = getArguments().getString("therapy");
 
         try {
-            WitBluetoothManager.requestPermissions(getActivity());
+            WitBluetoothManager.requestPermissions(getActivity()); // Might not be necessary here
             // Initialize the Bluetooth manager, here will apply for Bluetooth permissions
             WitBluetoothManager.initInstance(getActivity());
         } catch (Exception e) {
