@@ -601,9 +601,6 @@ public class TherapyMainFragment extends Fragment {
     //the second quaternion from the sensors
     float w, i, j, k;
     private synchronized float[] getDeviceData(Bwt901ble sensor) {
-
-
-
         if(sensor!=null){
             if(sensor.getDeviceData(WitSensorKey.Q0) != null) {
                 w = Float.parseFloat(sensor.getDeviceData(WitSensorKey.Q0));
