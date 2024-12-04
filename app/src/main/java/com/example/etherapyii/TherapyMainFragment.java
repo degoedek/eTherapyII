@@ -628,6 +628,7 @@ public class TherapyMainFragment extends Fragment {
     private void sensorFusion(int sensorNum) {
         try {
             while (!destroyed) {
+                // TODO: Maybe test less sleep between recordings
                 Thread.sleep(200);
 
                 switch (intent) {
